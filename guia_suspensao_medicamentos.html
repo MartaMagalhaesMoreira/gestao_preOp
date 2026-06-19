@@ -1,0 +1,330 @@
+<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Gestão Pré-Operatória do Doente Cirúrgico</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;color:#1f2937;background:#eef0f4;line-height:1.5}
+.wrap{max-width:1060px;margin:0 auto;padding:18px 14px 48px}
+.appbar{background:#1a4a8a;color:#fff;padding:15px 20px;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.appbar h1{font-size:17px;font-weight:700} .appbar p{font-size:11px;color:#b3cde0;margin-top:2px}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.cpill{background:#eff6ff;color:#1d4ed8;padding:5px 12px;border-radius:12px;font-size:12px;font-weight:600;border:1px solid #bfdbfe}
+.btnp{background:#1a4a8a;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btnp:hover{background:#0f3468}
+.btns{padding:8px 14px;font-size:12px;cursor:pointer;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#6b7280;font-weight:500}
+.btns:hover{background:#f9fafb;color:#374151}
+.instr{font-size:11px;color:#6b7280;margin-bottom:10px;padding:7px 12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;display:flex;gap:18px;flex-wrap:wrap}
+.pcard{background:#fff;border:1px solid #d1d5db;border-radius:10px;padding:14px 18px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.phead{border-bottom:2.5px solid #1a4a8a;padding-bottom:8px;margin-bottom:8px;font-family:Arial,sans-serif}
+.ph-title{font-size:15px;font-weight:700;color:#1a4a8a;text-transform:uppercase;letter-spacing:.04em}
+.ph-sub{font-size:10px;color:#9ca3af;margin-top:2px}
+.ph-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:7px;align-items:flex-end}
+.ph-fld{display:flex;align-items:baseline;gap:5px}
+.ph-lbl{font-size:10px;color:#9ca3af;white-space:nowrap;font-family:Arial}
+.espan{font-size:11px;font-weight:700;color:#1f2937;font-family:Arial;border-bottom:1.5px dashed #93c5fd;min-width:100px;display:inline-block;outline:none;cursor:text;padding:1px 3px;border-radius:2px}
+.espan:focus{border-bottom:2px solid #1a4a8a;background:#eff6ff}
+.ph-note{font-size:9px;color:#9ca3af;margin-top:6px;font-style:italic;font-family:Arial;line-height:1.5;background:#fafafa;padding:4px 8px;border-radius:4px;border-left:2px solid #bfdbfe}
+.pleg{display:flex;gap:14px;align-items:center;font-size:10px;color:#6b7280;font-family:Arial;flex-wrap:wrap;padding:7px 0 0}
+.pls{display:inline-flex;align-items:center;gap:4px}
+.plsym{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid #ccc;font-weight:700;font-size:12px;border-radius:2px;line-height:1}
+.pleg-al{color:#dc2626;font-size:10px;font-style:italic}
+.tscroll{border:1px solid #e5e7eb;border-radius:10px;overflow-x:auto}
+.dtb{width:100%;border-collapse:collapse;font-size:11px;font-family:Arial,sans-serif;min-width:680px}
+.dtb thead{position:sticky;top:0;z-index:5}
+.dtb th{background:#1a4a8a;color:#fff;padding:6px 3px;text-align:center;font-size:9px;font-weight:700;border-bottom:2px solid #0f3468;border-right:1px solid #3a6aa0;line-height:1.3;vertical-align:middle;white-space:nowrap}
+.dtb th.thn{text-align:left;padding-left:9px;width:150px;min-width:130px}
+.dtb th.thd{width:30px;min-width:26px} .dtb th.thr{width:80px;min-width:72px;font-size:8px}
+.dtb th.tho{text-align:left;padding-left:7px} .dtb th.thck{width:36px;min-width:32px;background:#0f3468;cursor:default}
+.catrow td{background:#dde8f4;font-weight:700;font-size:10px;color:#1a4a8a;text-transform:uppercase;letter-spacing:.04em;padding:5px 9px;border:1px solid #c4d4e8}
+.catrow td.tc{background:#c8d9ee;text-align:center;vertical-align:middle;border:1px solid #c4d4e8;width:36px}
+.dtr{background:#fff} .dtr:hover{background:#f5f8ff} .dtr.sel{background:#ebf3ff} .dtr.sel:hover{background:#e0ecff}
+td.tdn{padding:6px 5px 6px 8px;vertical-align:top;border:1px solid #e5eaf0;border-left:3px solid transparent;transition:border-left-color .12s}
+.dtr.sel td.tdn{border-left-color:#1a4a8a}
+.dn{font-weight:700;font-size:11px;line-height:1.3} .db{font-size:9px;color:#888;font-style:italic;margin-top:1px;line-height:1.3}
+.dtr.sel .dn{color:#111827;font-weight:700} .dtr.sel .db{color:#374151}
+td.tdd{text-align:center;vertical-align:middle;border:1px solid #e5eaf0;width:30px;min-width:26px;font-size:14px;font-weight:700;padding:3px 0;line-height:1;cursor:pointer;user-select:none;transition:filter .1s}
+td.tdd:hover{filter:brightness(.82)} td.tdd:active{transform:scale(.88)}
+
+.g{background:#dcfce7;color:#166534} .r{background:#fee2e2;color:#991b1b} .a{background:#fef3c7;color:#92400e} .n{background:#f3f4f6;color:#9ca3af;font-size:11px}
+td.tdr{padding:5px 4px;vertical-align:middle;border:1px solid #e5eaf0;font-size:9px;color:#555;text-align:center;line-height:1.4;cursor:text;outline:none}
+td.tdr:hover{background:#f8fafc} td.tdr:focus{background:#f0f7ff;border:1px solid #93c5fd!important}
+
+td.tdo{padding:5px 6px;vertical-align:top;border:1px solid #e5eaf0}
+.obe{font-size:10px;color:#333;line-height:1.5;outline:none;display:block;width:100%;border:none;border-bottom:1px dashed #d1d5db;padding-bottom:1px;font-family:Arial;background:transparent;cursor:text}
+.obe:hover{border-bottom-color:#9ca3af} .obe:focus{border-bottom:1.5px solid #1a4a8a;background:#f0f7ff;padding:2px 4px;border-radius:2px}
+.obe.alrt{color:#991b1b;font-weight:600}
+td.tck{text-align:center;vertical-align:middle;border:1px solid #e5eaf0;padding:0 6px;width:36px}
+input.dchk{width:16px;height:16px;cursor:pointer;accent-color:#1a4a8a} input.cchk{width:14px;height:14px;cursor:pointer;accent-color:#1a4a8a}
+.pfoot{font-size:9px;color:#9ca3af;font-family:Arial;border-top:1px solid #e5e7eb;padding-top:7px;margin-top:12px;line-height:1.6}
+.copyright{font-size:9px;color:#9ca3af;font-family:Arial;text-align:center;margin-top:10px;padding-top:7px;border-top:1px solid #e5e7eb;line-height:1.6}
+.disclaimer{font-size:9px;color:#9ca3af;font-family:Arial;margin-top:4px;line-height:1.5}
+@media print{
+  body{background:#fff} .no-print{display:none!important}
+  .wrap{padding:0;max-width:100%} .pcard{border:none;padding:0;box-shadow:none;margin-bottom:8px}
+  .tscroll{max-height:none;overflow:visible;border:none;border-radius:0} .dtb thead{position:static}
+  .dtr:not(.sel){display:none!important} .catrow:not(.cat-sel){display:none!important}
+  td.tdn{border-left:3px solid transparent!important}
+  .dtr.sel .dn{color:#111!important} .dtr.sel .db{color:#666!important} .dtr.sel td.tdr{color:#444!important}
+  .dtr.sel .obe{color:#333!important;border-bottom:none!important;background:none!important;padding:0!important}
+  .dtr.sel .obe.alrt{color:#991b1b!important} .dtr.sel td.tdd{filter:none!important}
+  .espan{border-bottom:0.5px solid #aaa!important;background:none!important} .ph-note{background:#f8f8f8!important}
+  .dtb th{border:0.5px solid #7a9ac0!important;padding:4px 2px;font-size:8px}
+  td.tdn,td.tdd,td.tdr,td.tdo{border:0.5px solid #cdd5df!important}
+  .catrow td{background:#dde8f4!important;border:0.5px solid #aabbcc!important}
+  .g{background:#dcfce7!important;color:#166534!important} .r{background:#fee2e2!important;color:#991b1b!important}
+  .a{background:#fef3c7!important;color:#92400e!important} .n{background:#f3f4f6!important;color:#9ca3af!important}
+  .dtr.sel{background:#fff!important} .dtb{font-size:9.5px} td.tdd{font-size:13px}
+  .pfoot{color:#888!important} .copyright{color:#888!important;border-top:0.5px solid #ccc!important} .disclaimer{color:#888!important} @page{size:A4 portrait;margin:14mm 15mm}
+}
+</style></head><body><div class="wrap">
+<div class="appbar no-print"><div><h1>Guia de Gestão Pré-Operatória do Doente Cirúrgico</h1>
+<p>Recomendações pré-operatórias e orientação da terapêutica farmacológica individualizada</p></div></div>
+<div class="toolbar no-print">
+<span class="cpill" id="cnt">0 selecionados</span>
+<button class="btns" onclick="clearAll()">✕&ensp;Limpar</button>
+<button class="btnp" onclick="window.print()">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+Imprimir / Guardar PDF</button></div>
+<div class="instr no-print">
+<span>☑&nbsp;Coluna esquerda: marque os fármacos do doente</span>
+<span>⇕&nbsp;Células de dia: clique para alternar ✓ ✗ ↓</span>
+<span>✏&nbsp;Qualquer texto sublinhado ou observação: clique para editar</span>
+</div>
+<div class="pcard">
+<div class="phead">
+<div class="ph-title">Guia de Gestão Pré-Operatória do Doente Cirúrgico</div>
+<div class="ph-sub">Recomendações pré-operatórias e orientação da terapêutica farmacológica individualizada</div>
+<div class="ph-row">
+<div class="ph-fld"><span class="ph-lbl">Doente:</span><span class="espan" contenteditable="true" spellcheck="false">Nome do doente</span></div>
+<div class="ph-fld"><span class="ph-lbl">Data:</span><span class="espan" contenteditable="true" spellcheck="false" style="min-width:80px">__/__/____</span></div>
+<div class="ph-fld"><span class="ph-lbl">Serviço:</span><span class="espan" contenteditable="true" spellcheck="false">ULS Médio Ave</span></div>
+</div>
+<div class="ph-note">Leia com atenção e siga as instruções do seu médico anestesiologista. Em caso de dúvida, contacte o serviço antes da data da operação.</div>
+</div>
+<div class="pleg">
+<span class="pls"><span class="plsym" style="background:#dcfce7;color:#166534;border-color:#86efac">✓</span>Tomar normalmente</span>
+<span class="pls"><span class="plsym" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5">✗</span>Não tomar (suspenso)</span>
+<span class="pls"><span class="plsym" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">↓</span>Ajustar dose (ver obs.)</span>
+<span class="pleg-al">⚠ = não alterar sem orientação médica</span>
+</div></div>
+<div class="tscroll"><table class="dtb" id="dtb"><thead><tr>
+<th class="thck no-print">☑</th>
+<th class="thn">Medicamento</th>
+<th class="thd">DIA<br>−7</th>
+<th class="thd">DIA<br>−6</th>
+<th class="thd">DIA<br>−5</th>
+<th class="thd">DIA<br>−4</th>
+<th class="thd">DIA<br>−3</th>
+<th class="thd">DIA<br>−2</th>
+<th class="thd">DIA<br>−1</th>
+<th class="thd" style="font-size:7.5px;line-height:1.2">DIA DA<br>CIRURGIA</th>
+<th class="thr">Reintro&shy;dução</th>
+<th class="tho">Observações / Instruções</th>
+</tr></thead><tbody id="tbody"></tbody></table></div>
+<div class="copyright">2026 © Marta Magalhães Moreira. Todos os direitos reservados.<div class="disclaimer">Ferramenta de suporte ao acompanhamento peri-operatório do doente cirúrgico. A responsabilidade clínica e legal é exclusiva do médico assistente e respetiva equipa multidisciplinar.</div></div>
+</div>
+<script>
+const S=[
+{id:'ah',t:'Anti-hipertensores',dr:[
+  {id:'ieca',n:'IECAs',b:'ramipril, enalapril, perindopril, lisinopril',d:[1,1,1,1,1,1,0,0],ri:'24–48h após',o:'Suspender na manhã do dia anterior. Risco de hipotensão intraoperatória grave.'},
+  {id:'ara2',n:'ARAs II (Sartans)',b:'losartan, valsartan, olmesartan, irbesartan',d:[1,1,1,1,1,1,0,0],ri:'24–48h após',o:'Suspender na manhã do dia anterior. Risco de hipotensão intraoperatória grave.'},
+  {id:'betab',n:'Beta-bloqueantes',b:'bisoprolol, metoprolol, carvedilol, nebivolol',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Nunca suspender de forma abrupta — risco de arritmia e angina.'},
+  {id:'calc',n:'Antagonistas do cálcio',b:'amlodipina, lercanidipina, nifedipina, diltiazem',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Tomar até ao dia da cirurgia com um pequeno gole de água.'},
+  {id:'diur',n:'Diuréticos',b:'hidroclorotiazida, indapamida, furosemida, torasemida',d:[1,1,1,1,1,1,0,0],ri:'24h após',o:'Suspender na manhã do dia anterior à cirurgia.'}
+]},
+{id:'ad',t:'Antidiabéticos',dr:[
+  {id:'metf',n:'Metformina',b:'Glucophage, Risidon',d:[1,1,1,1,1,0,0,0],ri:'48h após',o:'Suspender 48h antes. Risco de acidose láctica com anestesia geral.'},
+  {id:'sulf',n:'Sulfonilureias',b:'glibenclamida, gliclazida, glimepirida',d:[1,1,1,1,1,1,0,0],ri:'Quando tolerar dieta',o:'Suspender dia anterior. Risco de hipoglicemia em jejum.'},
+  {id:'sgl2',n:'Inibidores SGLT-2 ⚠',b:'empagliflozina, dapagliflozina, canagliflozina',d:[1,1,1,1,0,0,0,0],ri:'Quando tolerar dieta',o:'ATENÇÃO: suspender 72h antes. Risco de cetoacidose euglicémica.',al:1},
+  {id:'gp1s',n:'GLP-1 semanal ⚠',b:'semaglutida sc (Ozempic), dulaglutida (Trulicity)',d:[0,0,0,0,0,0,0,0],ri:'Quando tolerar dieta',o:'Última injeção semanal ≥7 dias antes. Risco de gastroparesia e aspiração.',al:1},
+  {id:'gp1d',n:'GLP-1 diário / oral',b:'liraglutida (Victoza), semaglutida oral (Rybelsus)',d:[1,1,1,1,1,1,0,0],ri:'Quando tolerar dieta',o:'Suspender no dia anterior à cirurgia.'},
+  {id:'glip',n:'Gliptinas (iDPP-4)',b:'sitagliptina, vildagliptina, saxagliptina',d:[1,1,1,1,1,1,0,0],ri:'Quando tolerar dieta',o:'Suspender no dia anterior à cirurgia.'},
+  {id:'insb',n:'Insulina basal',b:'Lantus, Toujeo, Levemir, Tresiba',d:[1,1,1,1,1,1,2,0],ri:'Retomar dose habitual',o:'Fazer 75–80% da dose na noite anterior (↓). Não tomar no dia da cirurgia.'},
+  {id:'insr',n:'Insulina rápida / prandial',b:'NovoRapid, Humalog, Apidra',d:[1,1,1,1,1,1,1,0],ri:'Quando tolerar dieta',o:'Não tomar no dia da cirurgia — estará em jejum.'}
+]},
+{id:'ac',t:'Anticoagulantes',dr:[
+  {id:'varf',n:'Varfarina',b:'Sintrom, Varfine',d:[1,1,0,0,0,0,0,0],ri:'Orientação médica (INR)',o:'Suspender 5 dias antes. Verificar INR. Pode requerer bridging com heparina.',al:1},
+  {id:'riva',n:'Rivaroxabano',b:'Xarelto',d:[1,1,1,1,1,0,0,0],ri:'6–8h após hemostase',o:'Suspender 48h antes. Neuroaxial ou alto risco hemorrágico: 72h.'},
+  {id:'apix',n:'Apixabano',b:'Eliquis',d:[1,1,1,1,1,0,0,0],ri:'6–8h após hemostase',o:'Suspender 48h antes. Neuroaxial ou alto risco hemorrágico: 72h.'},
+  {id:'dabi',n:'Dabigatrano',b:'Pradaxa',d:[1,1,1,1,0,0,0,0],ri:'6–8h após hemostase',o:'ClCr ≥50ml/min: 48h; ClCr 30–50: 72–96h. Verificar função renal.',al:1},
+  {id:'edox',n:'Edoxabano',b:'Lixiana',d:[1,1,1,1,1,0,0,0],ri:'6–8h após hemostase',o:'Suspender 48h antes da cirurgia.'},
+  {id:'hbpp',n:'HBPM dose profilática',b:'Clexane 40mg, Fragmin 2500UI',d:[1,1,1,1,1,1,2,0],ri:'6h após cirurgia',o:'Última injeção ≥12h antes (↓). Não administrar no dia da operação.'},
+  {id:'hbpt',n:'HBPM dose terapêutica',b:'Clexane 1mg/kg, Fragmin dose alta',d:[1,1,1,1,1,1,0,0],ri:'48–72h após',o:'Última injeção ≥24h antes da cirurgia.'}
+]},
+{id:'aa',t:'Antiagregantes plaquetários',dr:[
+  {id:'aas',n:'AAS dose baixa',b:'Aspirina 100mg, Cartia 100mg',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'Prevenção 2ª (cardíaca/AVC): MANTER. Prevenção 1ª: suspender 7 dias antes. Confirmar com anestesiologista.'},
+  {id:'clop',n:'Clopidogrel ⚠',b:'Plavix, Iscover',d:[1,0,0,0,0,0,0,0],ri:'24h após',o:'ATENÇÃO: stent coronário <12 meses — NÃO suspender sem autorização do cardiologista.',al:1},
+  {id:'tica',n:'Ticagrelor ⚠',b:'Brilique',d:[1,1,0,0,0,0,0,0],ri:'24h após',o:'ATENÇÃO: stent <12 meses — confirmar com cardiologista antes de suspender.',al:1},
+  {id:'pras',n:'Prasugrel ⚠',b:'Efient',d:[0,0,0,0,0,0,0,0],ri:'24h após',o:'ATENÇÃO: suspender ≥7 dias antes. Stent recente — coordenar com cardiologista.',al:1},
+  {id:'dipi',n:'Dipiridamol',b:'Persantine, Aggrenox (associado a AAS)',d:[1,1,1,1,1,0,0,0],ri:'24h após',o:'Suspender 48h antes. Se associado a AAS: avaliar risco/benefício com anestesiologista.'}
+]},
+{id:'op',t:'Opióides',dr:[
+  {id:'tram',n:'Tramadol',b:'Tramal, Contramal, Zamadol, Nobligan',d:[1,1,1,1,1,1,1,1],ri:'Quando tolerar dieta',o:'Manter até ao dia da cirurgia. Risco de síndrome serotoninérgica com alguns anestésicos. Informar o anestesiologista.'},
+  {id:'code',n:'Codeína',b:'Codeína, Codipertussin, Neocodion',d:[1,1,1,1,1,1,1,1],ri:'Quando tolerar dieta',o:'Manter normalmente. Informar o anestesiologista da dose habitual.'},
+  {id:'morf',n:'Morfina oral',b:'MST Continus, Sevredol, Oramorph',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'MANTER. Nunca suspender abruptamente — risco de síndrome de abstinência. Informar anestesiologista para ajuste da analgesia pós-op.'},
+  {id:'oxic',n:'Oxicodona',b:'OxyContin, Targinact',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'MANTER. Nunca suspender abruptamente. Informar o anestesiologista da dose e esquema habitual.'},
+  {id:'tape',n:'Tapentadol',b:'Palexia, Yantil',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'Manter normalmente até ao dia da cirurgia. Informar o anestesiologista.'},
+  {id:'fent',n:'Fentanil adesivo transdérmico',b:'Durogesic, Matrifen, Victanyl',d:[1,1,1,1,1,1,1,1],ri:'Manter adesivo',o:'MANTER o adesivo. Não remover sem indicação do anestesiologista. Informar dose e data da última aplicação.'},
+  {id:'bupr',n:'Buprenorfina patch / sublingual',b:'Norspan, Transtec, Temgesic sublingual',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'MANTER. Pode reduzir eficácia de opióides pós-op — informar obrigatoriamente o anestesiologista.'},
+  {id:'subx',n:'Buprenorfina/naloxona ⚠',b:'Suboxone, Subutex (substituição opiácea)',d:[1,1,1,1,1,1,1,1],ri:'Orientação médica',o:'ATENÇÃO: terapia de substituição opiácea. Requer protocolo periop. específico. Não modificar sem autorização do prescritor e anestesiologista.',al:1},
+  {id:'meta',n:'Metadona ⚠',b:'Metadona (dependência / dor crónica)',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'ATENÇÃO: manter dose diária habitual. Risco de prolongamento QT e múltiplas interações. Informar obrigatoriamente o anestesiologista.',al:1}
+]},
+{id:'ps',t:'Psicofármacos',dr:[
+  {id:'isrs',n:'Antidepressivos ISRS / IRSN',b:'sertralina, fluoxetina, escitalopram, paroxetina, venlafaxina, duloxetina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Nunca suspender abruptamente — síndrome de descontinuação. Informar o anestesiologista (risco de síndrome serotoninérgica).'},
+  {id:'tca',n:'Antidepressivos tricíclicos',b:'amitriptilina, clomipramina, nortriptilina, imipramina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Informar o anestesiologista — risco de prolongamento QT, hipotenso ortostática e interação com epinefrina. Nunca suspender abruptamente.'},
+  {id:'imao',n:'IMAOs ⚠',b:'Irreversíveis: fenelzina, tranilcipromina | Reversível: moclobemida (Manerix)',d:[0,0,0,0,0,0,0,0],ri:'Após avaliação psiquiátrica',o:'ATENÇÃO: IMAOs irreversíveis — suspender ≥14 dias antes. Moclobemida (reversível) — suspender 24h antes. Risco grave de crise hipertensiva e síndrome serotoninérgica.',al:1},
+  {id:'benz',n:'Benzodiazepinas / Ansiolíticos',b:'alprazolam, lorazepam, diazepam, clonazepam',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Suspensão abrupta pode causar abstinência grave e convulsões.'},
+  {id:'antp',n:'Antipsicóticos',b:'quetiapina, olanzapina, risperidona, haloperidol, clozapina, aripiprazol',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Informar anestesiologista — risco de prolongamento QT e hipotensão.'},
+  {id:'adhd',n:'Metilfenidato / Fármacos ADHD',b:'metilfenidato (Ritalin, Concerta), lisdexanfetamina (Vyvanse), atomoxetina',d:[1,1,1,1,1,1,0,0],ri:'Retomar após cirurgia',o:'Suspender na manhã do dia anterior. Risco de instabilidade hemodinâmica e interações com vasopressores perioperatórios.'},
+  {id:'liti',n:'Lítio',b:'Priadel, Camcolit',d:[1,1,1,1,1,0,0,0],ri:'Quando hidratado e estável',o:'Suspender 48h antes. Verificar níveis séricos e função renal pré-operatória.'}
+]},
+{id:'ca',t:'Antiarrítmicos e fármacos cardíacos específicos',dr:[
+  {id:'digo',n:'Digoxina',b:'Lanoxin',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Verificar ECG e doseamento sérico pré-op. Risco de toxicidade com alterações eletrolíticas peri-op (K⁺, Mg²⁺).'},
+  {id:'amio',n:'Amiodarona',b:'Cordarone, Sedacoron',d:[1,1,1,1,1,1,1,1],ri:'Manter',o:'MANTER — semivida ∸58 dias, impossível suspender. Informar anestesiologista: múltiplas interações, potenciação de bloqueadores neuromusculares, bradicardia.'},
+  {id:'ivab',n:'Ivabradina',b:'Procoralan',d:[1,1,1,1,1,1,0,0],ri:'24h após',o:'Suspender na manhã do dia anterior. Informar o anestesiologista da frequência cardíaca habitual.'},
+  {id:'antiarr',n:'Flecainida / Propafenona / Sotalol',b:'flecainida (Tambocor), propafenona (Rytmonorm), sotalol (Sotalex)',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Informar o anestesiologista — risco de pró-arritmia e prolongamento QT. Verificar ECG pré-operatório.'},
+  {id:'sacub',n:'Sacubitril/Valsartan ⚠',b:'Entresto',d:[1,1,1,1,1,1,0,0],ri:'48h após (confirmar)',o:'Suspender no dia anterior (mesmo princípio dos ARAs II). Risco de hipotensão grave. Coordenar com cardiologista.',al:1}
+]},
+{id:'im',t:'Imunossupressores e biológicos',dr:[
+  {id:'mtx',n:'Metotrexato',b:'Methotrexate, Ledertrexate',d:[1,1,1,1,1,1,1,1],ri:'48–72h após (confirmar)',o:'Baixa dose (reumatoógico, ≤25mg/sem): geralmente manter segundo diretrizes ESA/EULAR 2022. Alta dose (oncológico): suspender 7 dias — coordenar com oncologista. Avaliar função renal e hemograma.'},
+  {id:'aza',n:'Azatioprina / Micofenolato / Sirolimus',b:'azatioprina (Imuran), micofenolato (CellCept, Myfortic), sirolimus (Rapamune)',d:[1,1,1,1,1,1,1,1],ri:'Retomar logo que possível',o:'MANTER. Risco aumentado de infeção periop. e toxicidade orgão-específica. Coordenar com equipa prescritora.'},
+  {id:'cicl',n:'Ciclosporina / Tacrolimus',b:'ciclosporina (Sandimmun), tacrolimus (Prograf, Advagraf)',d:[1,1,1,1,1,1,1,1],ri:'Retomar logo que possível',o:'MANTER. Monitorizar níveis séricos e função renal. Múltiplas interações. Coordenar com equipa de transplante.'},
+  {id:'bio',n:'Anti-TNF e outros biológicos ⚠',b:'adalimumab (Humira), infliximab (Remicade), etanercept (Enbrel), rituximab, tocilizumab',d:[0,0,0,0,0,0,0,0],ri:'Confirmar com reumatologista',o:'ATENÇÃO: suspender antes de cirurgia eletiva major (2–5 semi-vidas conforme fármaco). Coordenar obrigatoriamente com reumatologista/imunologista. Risco de infeção pós-op.',al:1}
+]},
+{id:'ot',t:'Outros medicamentos',dr:[
+  {id:'pde5',n:'Inibidores PDE-5 ⚠',b:'sildenafil (Viagra, Revatio), tadalafil (Cialis), vardenafil (Levitra)',d:[1,1,1,1,1,1,0,0],ri:'24h após cirurgia',o:'ATENÇÃO: suspender 48h antes. Interação grave com nitratos perioperatórios — risco de hipotensão grave e refratária.',al:1},
+  {id:'esta',n:'Estatinas (colesterol)',b:'atorvastatina, rosuvastatina, sinvastatina, fluvastatina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Efeito cardioprotetor perioperatório comprovado. Nunca suspender abruptamente.'},
+  {id:'aine',n:'Anti-inflamatórios (AINEs)',b:'ibuprofeno, naproxeno, diclofenac, meloxicam, etoricoxib',d:[1,1,1,1,0,0,0,0],ri:'Quando hemostase ok',o:'Suspender 3 dias antes. Risco de hemorragia e lesão renal aguda perioperatória.'},
+  {id:'cort',n:'Corticoides sistémicos',b:'prednisolona, deflazacorte, metilprednisolona, dexametasona',d:[1,1,1,1,1,1,1,1],ri:'Manter / ajustar dose',o:'NUNCA suspender abruptamente. Pode necessitar dose de stress perioperatória (hidrocortisona IV). Informar o anestesiologista.'},
+  {id:'baclof',n:'Baclofeno',b:'Lioresal',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente (via alternativa se oral impossível)',o:'NUNCA suspender abruptamente — síndrome de abstinência grave (convulsões, hipertermia, rabdomiólise). Tomar até ao dia da cirurgia. Se jejum prolongado, requerer forma IV ou intratecal.'},
+  {id:'ibp',n:'Inibidores da bomba de protões (IBP)',b:'omeprazol (Losec), pantoprazol (Pantoloc), lansoprazol, esomeprazol',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Reduzem volume e acidez gástrica — importante proteção contra aspiração. Tomar com pequeno gole de água.'},
+  {id:'antitir',n:'Antitiroideus',b:'metimazol (Metibasol), propiltiouracilo',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Nunca suspender — risco de tempestade tiroideia perioperatória. Tomar com gole de água no dia da cirurgia.'},
+  {id:'aepi',n:'Antiepilépticos',b:'valproato, lamotrigina, levetiracetam, carbamazepina, oxcarbazepina, lacosamida',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'NUNCA suspender. Tomar com gole de água no dia da cirurgia.'},
+  {id:'park',n:'Medicação para Parkinson',b:'levodopa/carbidopa, entacapone, rotigotina patch, pramipexole, rasagilina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'NUNCA suspender. Tomar o mais próximo possível da hora da cirurgia. Atrasos podem precipitar crise motora.'},
+  {id:'alz',n:'Medicação para demência / Alzheimer',b:'donepezil (Aricept), rivastigmina (Exelon), galantamina (Reminyl), memantina (Ebixa)',d:[1,1,1,1,1,1,1,1],ri:'Logo que possível',o:'MANTER. Informar obrigatoriamente o anestesiologista — inibidores da acetilcolinesterase prolongam bloqueio neuromuscular e potenciam suxametónio.'},
+  {id:'tiro',n:'Hormona tiroideia',b:'Levotiroxina (Eutirox, Synthroid)',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Tomar normalmente, incluindo no dia da cirurgia.'},
+  {id:'ralox',n:'Raloxifena / Tamoxifeno / SERMs',b:'raloxifena (Evista), tamoxifeno, bazedoxifena',d:[0,0,0,0,0,0,0,0],ri:'Confirmar com oncologista/ginecologista',o:'* Cirurgias major ou imobilização prolongada: suspender 4 semanas antes (risco tromboembólico). Cirurgias minor / ambutatório: confirmar com prescritor.'},
+  {id:'pilu',n:'Contracetivos hormonais / THS',b:'pílula, adesivo transdérmico, anel vaginal, THS menopáusica',d:[0,0,0,0,0,0,0,0],ri:'Confirmar com ginecologista',o:'* Cirurgias major: suspender 4 semanas antes (risco tromboembólico). Cirurgias minor de ambutatório: pode manter. Confirmar com o anestesiologista.'},
+  {id:'test',n:'Testosterona / Análogos androgénicos',b:'testosterona (Nebido, Testogel, Testim), esteroides anabolizantes',d:[0,0,0,0,0,0,0,0],ri:'Após cicatrização adequada',o:'* Cirurgias major: suspender 4–6 semanas antes (risco tromboembólico e policitémia). Cirurgias minor: discutir com anestesiologista.'},
+  {id:'supl',n:'Suplementos / Fitoterapêuticos',b:'ginkgo biloba, alho, ómega-3, vitamina E, equínacéa, kava, valériana, erva-de-são-joão',d:[0,0,0,0,0,0,0,0],ri:'24h após',o:'Suspender TODOS 7 dias antes. Ginkgo/alho/omega-3: antiagregantes. Erva-de-são-joão: indução CYP3A4. Valeriana/kava: sedação.'}
+]}
+];
+
+const sel=new Set();
+const CL={1:'g',0:'r',2:'a'};
+const SY={1:'✓',0:'✗',2:'↓'};
+const cl=v=>CL[v]||'n';
+const sy=v=>SY[v]||'—';
+
+function cycleDay(cell){
+  const c=[1,0,2];
+  let v=parseInt(cell.dataset.v);
+  let i=c.indexOf(v); i=i<0?0:(i+1)%c.length;
+  const nv=c[i];
+  cell.dataset.v=nv; cell.textContent=sy(nv); cell.className='tdd '+cl(nv);
+}
+
+function updateCnt(){
+  const n=sel.size;
+  document.getElementById('cnt').textContent=n===1?'1 selecionado':n+' selecionados';
+}
+
+function updateCat(catId){
+  const hasSel=S.find(s=>s.id===catId).dr.some(d=>sel.has(d.id));
+  document.querySelector('tr.catrow[data-cat="'+catId+'"]').classList.toggle('cat-sel',hasSel);
+}
+
+function setDrug(id,catId,on){
+  const tr=document.querySelector('tr.dtr[data-drug="'+id+'"]');
+  if(!tr)return;
+  if(on){sel.add(id);tr.classList.add('sel');}else{sel.delete(id);tr.classList.remove('sel');}
+  updateCat(catId); updateCnt();
+}
+
+function setCat(catId,on){
+  S.find(s=>s.id===catId).dr.forEach(d=>{
+    const chk=document.querySelector('.dchk[data-id="'+d.id+'"]');
+    if(chk){chk.checked=on;setDrug(d.id,catId,on);}
+  });
+}
+
+function clearAll(){
+  [...sel].forEach(id=>{
+    const c=document.querySelector('.dchk[data-id="'+id+'"]');
+    if(c)c.checked=false;
+    const tr=document.querySelector('tr.dtr[data-drug="'+id+'"]');
+    if(tr)tr.classList.remove('sel');
+  });
+  sel.clear();
+  document.querySelectorAll('tr.catrow').forEach(r=>r.classList.remove('cat-sel'));
+  document.querySelectorAll('.cchk').forEach(c=>c.checked=false);
+  updateCnt();
+}
+
+function buildTbl(){
+  const tb=document.getElementById('tbody');
+  S.forEach(sec=>{
+    const ch=document.createElement('tr');
+    ch.className='catrow'; ch.dataset.cat=sec.id;
+    const tc=document.createElement('td'); tc.className='tc no-print';
+    const cc=document.createElement('input'); cc.type='checkbox'; cc.className='cchk'; cc.title='Selecionar todos';
+    cc.addEventListener('change',e=>setCat(sec.id,e.target.checked));
+    tc.appendChild(cc);
+    const td=document.createElement('td'); td.colSpan=11; td.textContent=sec.t;
+    ch.appendChild(tc); ch.appendChild(td); tb.appendChild(ch);
+    sec.dr.forEach(d=>{
+      const tr=document.createElement('tr');
+      tr.className='dtr'; tr.dataset.drug=d.id; tr.dataset.cat=sec.id;
+      const tck=document.createElement('td'); tck.className='tck no-print';
+      const chk=document.createElement('input'); chk.type='checkbox'; chk.className='dchk'; chk.dataset.id=d.id; chk.title='Incluir no panfleto';
+      chk.addEventListener('change',e=>setDrug(d.id,sec.id,e.target.checked));
+      tck.appendChild(chk); tr.appendChild(tck);
+      const tn=document.createElement('td'); tn.className='tdn';
+      tn.innerHTML='<div class="dn">'+d.n+'</div><div class="db">ex. '+d.b+'</div>';
+      tr.appendChild(tn);
+      d.d.forEach(v=>{
+        const td=document.createElement('td'); td.className='tdd '+cl(v); td.dataset.v=v;
+        td.textContent=sy(v); td.title='Clique para alterar';
+        td.addEventListener('click',()=>cycleDay(td)); tr.appendChild(td);
+      });
+      const ri=document.createElement('td'); ri.className='tdr'; ri.contentEditable='true'; ri.spellcheck=false; ri.title='Clique para editar'; ri.textContent=d.ri; tr.appendChild(ri);
+      const ot=document.createElement('td'); ot.className='tdo';
+      const ob=document.createElement('div'); ob.className='obe'+(d.al?' alrt':'');
+      ob.contentEditable='true'; ob.spellcheck=false; ob.title='Clique para editar'; ob.textContent=d.o;
+      ot.appendChild(ob); tr.appendChild(ot); tb.appendChild(tr);
+    });
+  });
+  // 3 linhas personalizáveis para o médico preencher
+  const custIds=['custom1','custom2','custom3'];
+  const custCat=document.createElement('tr');
+  custCat.className='catrow'; custCat.dataset.cat='custom';
+  const custTc=document.createElement('td'); custTc.className='tc no-print';
+  const custCc=document.createElement('input'); custCc.type='checkbox'; custCc.className='cchk'; custCc.title='Selecionar todos';
+  custCc.addEventListener('change',e=>custIds.forEach(cid=>{const ch=document.querySelector('.dchk[data-id="'+cid+'"]');if(ch){ch.checked=e.target.checked;ch.dispatchEvent(new Event('change'));}}));
+  custTc.appendChild(custCc);
+  const custTd=document.createElement('td'); custTd.colSpan=11; custTd.textContent='Outros fármacos (a preencher pelo médico)';
+  custCat.appendChild(custTc); custCat.appendChild(custTd); tb.appendChild(custCat);
+  custIds.forEach(cid=>{
+    const tr=document.createElement('tr'); tr.className='dtr'; tr.dataset.drug=cid; tr.dataset.cat='custom';
+    const tck=document.createElement('td'); tck.className='tck no-print';
+    const chk=document.createElement('input'); chk.type='checkbox'; chk.className='dchk'; chk.dataset.id=cid; chk.title='Incluir no panfleto';
+    chk.addEventListener('change',e=>{
+      if(e.target.checked){sel.add(cid);tr.classList.add('sel');}else{sel.delete(cid);tr.classList.remove('sel');}
+      custCat.classList.toggle('cat-sel',custIds.some(c=>sel.has(c)));
+      updateCnt();
+    });
+    tck.appendChild(chk); tr.appendChild(tck);
+    const tn=document.createElement('td'); tn.className='tdn';
+    const dn=document.createElement('div'); dn.className='dn'; dn.contentEditable='true'; dn.spellcheck=false; dn.title='Nome do fármaco'; dn.style.cssText='min-height:16px;border-bottom:1px dashed #93c5fd;outline:none;cursor:text';
+    const db=document.createElement('div'); db.className='db'; db.contentEditable='true'; db.spellcheck=false; db.title='Exemplos'; db.style.cssText='min-height:11px;border-bottom:1px dashed #d1d5db;outline:none;cursor:text'; db.textContent='ex. ';
+    tn.appendChild(dn); tn.appendChild(db); tr.appendChild(tn);
+    for(let j=0;j<8;j++){const td=document.createElement('td');td.className='tdd n';td.dataset.v='-1';td.textContent='—';td.title='Clique para alterar';td.addEventListener('click',()=>cycleDay(td));tr.appendChild(td);}
+    const ri=document.createElement('td'); ri.className='tdr'; ri.contentEditable='true'; ri.spellcheck=false; ri.title='Clique para editar'; tr.appendChild(ri);
+    const ot=document.createElement('td'); ot.className='tdo';
+    const ob=document.createElement('div'); ob.className='obe'; ob.contentEditable='true'; ob.spellcheck=false; ob.title='Clique para editar';
+    ot.appendChild(ob); tr.appendChild(ot); tb.appendChild(tr);
+  });
+}
+buildTbl();
+
+</script></body></html>
