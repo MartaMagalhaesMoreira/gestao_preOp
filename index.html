@@ -1,497 +1,342 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guia de Gestão Pré-Operatória do Doente Cirúrgico</title>
+<meta name="description" content="Ferramentas clínicas digitais de suporte à prática de Anestesiologia, desenvolvidas por Marta Magalhães Moreira.">
+<title>Marta Magalhães Moreira · Ferramentas Clínicas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;color:#1f2937;background:#eef0f4;line-height:1.5}
-.wrap{max-width:1060px;margin:0 auto;padding:18px 14px 48px}
-.appbar{background:#1a4a8a;color:#fff;padding:15px 20px;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.appbar h1{font-size:17px;font-weight:700} .appbar p{font-size:11px;color:#b3cde0;margin-top:2px}
-.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.cpill{background:#eff6ff;color:#1d4ed8;padding:5px 12px;border-radius:12px;font-size:12px;font-weight:600;border:1px solid #bfdbfe}
-.btnp{background:#1a4a8a;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.btnp:hover{background:#0f3468}
-.btns{padding:8px 14px;font-size:12px;cursor:pointer;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#6b7280;font-weight:500}
-.btns:hover{background:#f9fafb;color:#374151}
-.instr{font-size:11px;color:#6b7280;margin-bottom:10px;padding:7px 12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;display:flex;gap:18px;flex-wrap:wrap}
-.pcard{background:#fff;border:1px solid #d1d5db;border-radius:10px;padding:14px 18px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.phead{border-bottom:2.5px solid #1a4a8a;padding-bottom:8px;margin-bottom:8px;font-family:Arial,sans-serif}
-.ph-title{font-size:15px;font-weight:700;color:#1a4a8a;text-transform:uppercase;letter-spacing:.04em}
-.ph-sub{font-size:10px;color:#9ca3af;margin-top:2px}
-.ph-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:7px;align-items:flex-end}
-.ph-fld{display:flex;align-items:baseline;gap:5px}
-.ph-lbl{font-size:10px;color:#9ca3af;white-space:nowrap;font-family:Arial}
-.espan{font-size:11px;font-weight:700;color:#1f2937;font-family:Arial;border-bottom:1.5px dashed #93c5fd;min-width:100px;display:inline-block;outline:none;cursor:text;padding:1px 3px;border-radius:2px}
-.espan:focus{border-bottom:2px solid #1a4a8a;background:#eff6ff}
-.ph-note{font-size:9px;color:#9ca3af;margin-top:6px;font-style:italic;font-family:Arial;line-height:1.5;background:#fafafa;padding:4px 8px;border-radius:4px;border-left:2px solid #bfdbfe}
-.pleg{display:flex;gap:14px;align-items:center;font-size:10px;color:#6b7280;font-family:Arial;flex-wrap:wrap;padding:7px 0 0}
-.pls{display:inline-flex;align-items:center;gap:4px}
-.plsym{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid #ccc;font-weight:700;font-size:12px;border-radius:2px;line-height:1}
-.pleg-al{color:#dc2626;font-size:10px;font-style:italic}
-.pleg{display:none}
-.print-only-leg{display:flex;gap:14px;align-items:center;font-size:10px;color:#6b7280;font-family:Arial,sans-serif;flex-wrap:wrap;padding:9px 0 8px;margin-bottom:4px;border-top:0.5px solid #e5e7eb}
-.tscroll{border:1px solid #e5e7eb;border-radius:10px;overflow-x:auto}
-.dtb{width:100%;border-collapse:collapse;font-size:11px;font-family:Arial,sans-serif;min-width:680px}
-.dtb thead{position:sticky;top:0;z-index:5}
-.dtb th{background:#1a4a8a;color:#fff;padding:6px 3px;text-align:center;font-size:9px;font-weight:700;border-bottom:2px solid #0f3468;border-right:1px solid #3a6aa0;line-height:1.3;vertical-align:middle;white-space:nowrap}
-.dtb th.thn{text-align:left;padding-left:9px;width:150px;min-width:130px}
-.dtb th.thd{width:30px;min-width:26px} .dtb th.thr{width:80px;min-width:72px;font-size:8px}
-.dtb th.tho{text-align:left;padding-left:7px} .dtb th.thck{width:36px;min-width:32px;background:#0f3468;cursor:default}
-.catrow td{background:#dde8f4;font-weight:700;font-size:10px;color:#1a4a8a;text-transform:uppercase;letter-spacing:.04em;padding:5px 9px;border:1px solid #c4d4e8}
-.catrow td.tc{background:#c8d9ee;text-align:center;vertical-align:middle;border:1px solid #c4d4e8;width:36px}
-.dtr{background:#fff} .dtr:hover{background:#f5f8ff} .dtr.sel{background:#ebf3ff} .dtr.sel:hover{background:#e0ecff}
-td.tdn{padding:6px 5px 6px 8px;vertical-align:top;border:1px solid #e5eaf0;border-left:3px solid transparent;transition:border-left-color .12s}
-.dtr.sel td.tdn{border-left-color:#1a4a8a}
-.dn{font-weight:700;font-size:11px;line-height:1.3} .db{font-size:9px;color:#888;font-style:italic;margin-top:1px;line-height:1.3}
-.dtr.sel .dn{color:#111827;font-weight:700} .dtr.sel .db{color:#374151}
-td.tdd{text-align:center;vertical-align:middle;border:1px solid #e5eaf0;width:30px;min-width:26px;font-size:14px;font-weight:700;padding:3px 0;line-height:1;cursor:pointer;user-select:none;transition:filter .1s}
-td.tdd:hover{filter:brightness(.82)} td.tdd:active{transform:scale(.88)}
-
-.g{background:#dcfce7;color:#166534} .r{background:#fee2e2;color:#991b1b} .a{background:#fef3c7;color:#92400e} .n{background:#f3f4f6;color:#9ca3af;font-size:11px}
-td.tdr{padding:5px 4px;vertical-align:middle;border:1px solid #e5eaf0;font-size:9px;color:#555;text-align:center;line-height:1.4;cursor:text;outline:none}
-td.tdr:hover{background:#f8fafc} td.tdr:focus{background:#f0f7ff;border:1px solid #93c5fd!important}
-
-td.tdo{padding:5px 6px;vertical-align:top;border:1px solid #e5eaf0}
-.obe{font-size:10px;color:#333;line-height:1.5;outline:none;display:block;width:100%;border:none;border-bottom:1px dashed #d1d5db;padding-bottom:1px;font-family:Arial;background:transparent;cursor:text}
-.obe:hover{border-bottom-color:#9ca3af} .obe:focus{border-bottom:1.5px solid #1a4a8a;background:#f0f7ff;padding:2px 4px;border-radius:2px}
-.obe.alrt{color:#991b1b;font-weight:600}
-sup.ref{font-size:8px;color:#1a4a8a;font-weight:700;margin-left:1px;line-height:0;vertical-align:super;cursor:default}
-.bib-wrap{padding:16px 0 10px;margin-top:16px;border-top:1px solid #e5e7eb}
-.bib-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#1a4a8a;margin-bottom:10px;font-family:Arial,sans-serif}
-.bib-list{font-size:9px;color:#6b7280;line-height:1.8;list-style:none;padding:0;font-family:Arial,sans-serif}
-.bib-list li{margin-bottom:3px;padding-left:38px;position:relative}
-.bib-num{color:#1a4a8a;font-weight:700;position:absolute;left:0;top:0;line-height:1.8}
-td.tck{text-align:center;vertical-align:middle;border:1px solid #e5eaf0;padding:0 6px;width:36px}
-input.dchk{width:16px;height:16px;cursor:pointer;accent-color:#1a4a8a} input.cchk{width:14px;height:14px;cursor:pointer;accent-color:#1a4a8a}
-.pfoot{font-size:9px;color:#9ca3af;font-family:Arial;border-top:1px solid #e5e7eb;padding-top:7px;margin-top:12px;line-height:1.6}
-.copyright{font-size:9px;color:#9ca3af;font-family:Arial;text-align:center;margin-top:10px;padding-top:7px;border-top:1px solid #e5e7eb;line-height:1.6}
-.disclaimer{font-size:9px;color:#9ca3af;font-family:Arial;margin-top:4px;line-height:1.5}
-.care-wrap{margin-bottom:14px}
-.fast-wrap{margin-bottom:14px}
-.ftb{width:100%;border-collapse:collapse;font-size:11px;font-family:Arial,sans-serif}
-.ftb thead th{background:#0e7490;color:#fff;padding:6px 9px;text-align:left;font-size:9px;font-weight:700;border-bottom:2px solid #0a5568;border-right:1px solid #1ea1bf;line-height:1.3;vertical-align:middle}
-.ftb th.thck{width:36px;min-width:32px;text-align:center;background:#0a5568;padding:6px 3px}
-.ftr{background:#f0fafb}
-.ftr:hover{background:#e0f5f8}
-.ftr.sel{background:#fff}
-.ftr.sel:hover{background:#f0fafc}
-.ftr.sel td.fast-td{border-left:3px solid #0e7490}
-td.fast-bull{width:26px;text-align:center;font-size:13px;color:#0e7490;border:1px solid #cce8ee;padding:8px 4px;vertical-align:top;line-height:1}
-td.fast-td{padding:0;border:1px solid #cce8ee;border-left:3px solid transparent;transition:border-left-color .12s}
-.fast-edit{display:block;width:100%;padding:8px 12px 8px 10px;font-size:11px;font-family:Arial;color:#1f2937;line-height:1.65;outline:none;cursor:text;border-bottom:1px dashed #d1d5db;background:transparent}
-.fast-edit:hover{border-bottom-color:#9ca3af}
-.fast-edit:focus{border-bottom:1.5px solid #0e7490;background:#f0fafb;padding-left:12px}
-.ftr:not(.sel) td.fast-td{border-left-color:transparent}
-.ftr:not(.sel) td.fast-bull{color:#a0c4cc}
-.ftr:not(.sel) .fast-edit{color:#4b5563}
-td.tck-fast{text-align:center;vertical-align:middle;border:1px solid #cce8ee;padding:0 6px;width:36px}
-.ctb{width:100%;border-collapse:collapse;font-size:11px;font-family:Arial,sans-serif}
-.ctb thead th{background:#164e63;color:#fff;padding:6px 9px;text-align:left;font-size:9px;font-weight:700;border-bottom:2px solid #0d3d41;border-right:1px solid #2d7a7a;line-height:1.3;vertical-align:middle}
-.ctb th.thck{width:36px;min-width:32px;text-align:center;background:#0d3d41;padding:6px 3px}
-.ctr{background:#f4faf8}
-.ctr:hover{background:#e8f6f3}
-.ctr.sel{background:#fff}
-.ctr.sel:hover{background:#f0fafa}
-.ctr.sel td.care-txt{border-left:3px solid #164e63}
-td.care-bull{width:26px;text-align:center;font-size:13px;color:#164e63;border:1px solid #d4eae6;padding:8px 4px;vertical-align:top;line-height:1}
-td.care-txt{padding:8px 12px 8px 10px;font-size:11px;font-family:Arial;color:#1f2937;line-height:1.65;border:1px solid #d4eae6;border-left:3px solid transparent;transition:border-left-color .12s;outline:none;cursor:text}
-td.care-txt:focus{background:#f4faf8;border-bottom:1px dashed #93c5fd!important}
-.ctr:not(.sel) td.care-txt{color:#4b5563}
-.ctr:not(.sel) td.care-bull{color:#a0b4b0}
-td.tck-care{text-align:center;vertical-align:middle;border:1px solid #d4eae6;padding:0 6px;width:36px}
-@media print{
-  body{background:#fff} .no-print{display:none!important}
-  .wrap{padding:0;max-width:100%} .pcard{border:none;padding:0;box-shadow:none;margin-bottom:8px}
-  .tscroll{max-height:none;overflow:visible;border:none;border-radius:0} .dtb thead{position:static}
-  .dtr:not(.sel){display:none!important} .catrow:not(.cat-sel){display:none!important}
-  td.tdn{border-left:3px solid transparent!important}
-  .dtr.sel .dn{color:#111!important} .dtr.sel .db{color:#666!important} .dtr.sel td.tdr{color:#444!important}
-  .dtr.sel .obe{color:#333!important;border-bottom:none!important;background:none!important;padding:0!important}
-  .dtr.sel .obe.alrt{color:#991b1b!important} .dtr.sel td.tdd{filter:none!important}
-  .espan{border-bottom:0.5px solid #aaa!important;background:none!important} .ph-note{background:#f8f8f8!important}
-  .dtb th{border:0.5px solid #7a9ac0!important;padding:4px 2px;font-size:8px}
-  td.tdn,td.tdd,td.tdr,td.tdo{border:0.5px solid #cdd5df!important}
-  .catrow td{background:#dde8f4!important;border:0.5px solid #aabbcc!important}
-  .g{background:#dcfce7!important;color:#166534!important} .r{background:#fee2e2!important;color:#991b1b!important}
-  .a{background:#fef3c7!important;color:#92400e!important} .n{background:#f3f4f6!important;color:#9ca3af!important}
-  .dtr.sel{background:#fff!important} .dtb{font-size:9.5px} td.tdd{font-size:13px}
-  .pfoot{color:#888!important} .copyright{color:#888!important;border-top:0.5px solid #ccc!important} .fast-empty{display:none!important} .ftr:not(.sel){display:none!important} .fast-edit{border-bottom:none!important;background:none!important;padding:8px 12px 8px 10px!important} .care-empty{display:none!important} .ctr:not(.sel){display:none!important} .disclaimer{color:#888!important} sup.ref{color:#1a4a8a!important} .bib-hdr{color:#1a4a8a!important} .bib-list{color:#555!important} .bib-wrap{display:none!important} .pleg{display:none!important} .print-only-leg{display:flex!important;gap:14px;align-items:center;font-size:10px;color:#6b7280;font-family:Arial,sans-serif;flex-wrap:wrap;padding:7px 0;margin-bottom:8px;border-bottom:0.5px solid #ccc} @page{size:A4 portrait;margin:14mm 15mm}
+:root{
+  --bg:#ede8df;
+  --bg2:#f5f1ea;
+  --accent:#c4b09a;
+  --accent-d:#9e8b79;
+  --ink:#1a1512;
+  --ink-m:#5c534c;
+  --ink-l:#8a7e76;
+  --border:#d4ccc4;
+  --white:#faf8f4;
 }
-</style></head><body><div class="wrap">
-<div class="appbar no-print"><div><h1>Guia de Gestão Pré-Operatória do Doente Cirúrgico</h1>
-<p>Recomendações pré-operatórias e orientação da terapêutica farmacológica individualizada</p></div></div>
-<div class="toolbar no-print">
-<span class="cpill" id="cnt">0 selecionados</span>
-<button class="btns" onclick="clearAll()">✕&ensp;Limpar</button>
-<button class="btnp" onclick="window.print()">
-<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-Imprimir / Guardar PDF</button></div>
-<div class="instr no-print">
-<span>☑&nbsp;Coluna esquerda: marque os fármacos do doente</span>
-<span>⇕&nbsp;Células de dia: clique para alternar ✓ ✗ ↓</span>
-<span>✏&nbsp;Qualquer texto sublinhado ou observação: clique para editar</span>
-</div>
-<div class="pcard">
-<div class="phead">
-<div class="ph-title">Guia de Gestão Pré-Operatória do Doente Cirúrgico</div>
-<div class="ph-sub">Recomendações pré-operatórias e orientação da terapêutica farmacológica individualizada</div>
-<div class="ph-row">
-<div class="ph-fld"><span class="ph-lbl">Doente:</span><span class="espan" contenteditable="true" spellcheck="false">Nome do doente</span></div>
-<div class="ph-fld"><span class="ph-lbl">Data:</span><span class="espan" contenteditable="true" spellcheck="false" style="min-width:80px">__/__/____</span></div>
-<div class="ph-fld"><span class="ph-lbl">Serviço:</span><span class="espan" contenteditable="true" spellcheck="false">ULS Médio Ave</span></div>
-</div>
-<div class="ph-note">Leia com atenção e siga as instruções do seu médico anestesiologista. Em caso de dúvida, contacte o serviço antes da data da operação.</div>
-</div>
-<div class="pleg">
-<span class="pls"><span class="plsym" style="background:#dcfce7;color:#166534;border-color:#86efac">✓</span>Tomar normalmente</span>
-<span class="pls"><span class="plsym" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5">✗</span>Não tomar (suspenso)</span>
-<span class="pls"><span class="plsym" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">↓</span>Ajustar dose (ver obs.)</span>
-<span class="pleg-al">⚠ = não alterar sem orientação médica</span>
-</div></div>
-<div class="care-wrap care-empty" id="care-wrap">
-<table class="ctb">
-<thead><tr>
-<th class="thck no-print"><input type="checkbox" id="care-all" class="cchk" title="Selecionar todos" style="width:14px;height:14px;cursor:pointer;accent-color:#164e63"></th>
-<th colspan="2">Cuidados básicos — Instruções para o dia da cirurgia</th>
-</tr></thead>
-<tbody>
-<tr class="ctr" data-care="c1"><td class="tck-care no-print"><input type="checkbox" class="care-chk" data-care="c1" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#164e63"></td><td class="care-bull">●</td><td class="care-txt" contenteditable="true" spellcheck="false">Tome um banho de chuveiro e não aplique cremes, loções ou perfumes.</td></tr>
-<tr class="ctr" data-care="c2"><td class="tck-care no-print"><input type="checkbox" class="care-chk" data-care="c2" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#164e63"></td><td class="care-bull">●</td><td class="care-txt" contenteditable="true" spellcheck="false">Não use maquilhagem nem verniz no dia da cirurgia.</td></tr>
-<tr class="ctr" data-care="c3"><td class="tck-care no-print"><input type="checkbox" class="care-chk" data-care="c3" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#164e63"></td><td class="care-bull">●</td><td class="care-txt" contenteditable="true" spellcheck="false">Não deve trazer para o Bloco Operatório anéis, pulseiras, colares ou brincos. Deixe os seus valores em casa ou com o acompanhante.</td></tr>
-<tr class="ctr" data-care="c4"><td class="tck-care no-print"><input type="checkbox" class="care-chk" data-care="c4" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#164e63"></td><td class="care-bull">●</td><td class="care-txt" contenteditable="true" spellcheck="false">Não se esqueça de trazer consigo os exames que estão na sua posse e os medicamentos que toma regularmente.</td></tr>
-<tr class="ctr" data-care="c5"><td class="tck-care no-print"><input type="checkbox" class="care-chk" data-care="c5" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#164e63"></td><td class="care-bull">●</td><td class="care-txt" contenteditable="true" spellcheck="false"></td></tr>
-<tr class="ctr" data-care="c6"><td class="tck-care no-print"><input type="checkbox" class="care-chk" data-care="c6" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#164e63"></td><td class="care-bull">●</td><td class="care-txt" contenteditable="true" spellcheck="false"></td></tr>
-</tbody></table></div>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;font-weight:300}
 
-<div class="fast-wrap fast-empty" id="fast-wrap">
-<table class="ftb">
-<thead><tr>
-<th class="thck no-print"><input type="checkbox" id="fast-all" class="cchk" title="Selecionar todos" style="width:14px;height:14px;cursor:pointer;accent-color:#0e7490"></th>
-<th colspan="2">Jejum Pré-Operatório</th>
-</tr></thead>
-<tbody>
-<tr class="ftr" data-fast="f1"><td class="tck-fast no-print"><input type="checkbox" class="fast-chk" data-fast="f1" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#0e7490"></td><td class="fast-bull">&#9679;</td><td class="fast-td"><div class="fast-edit" contenteditable="true" spellcheck="false">Os líquidos claros, nos quais se incluem água, chá, sumos de fruta sem polpa e café sem leite, na quantidade máxima de 200 mL (1 copo), podem ser consumidos até 2h antes da cirurgia.</div></td></tr>
-<tr class="ftr" data-fast="f2"><td class="tck-fast no-print"><input type="checkbox" class="fast-chk" data-fast="f2" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#0e7490"></td><td class="fast-bull">&#9679;</td><td class="fast-td"><div class="fast-edit" contenteditable="true" spellcheck="false">Uma refeição ligeira (por exemplo, torrada e um líquido claro) necessita de jejum de pelo menos 6 horas.</div></td></tr>
-<tr class="ftr" data-fast="f3"><td class="tck-fast no-print"><input type="checkbox" class="fast-chk" data-fast="f3" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#0e7490"></td><td class="fast-bull">&#9679;</td><td class="fast-td"><div class="fast-edit" contenteditable="true" spellcheck="false">Para refeições mais complexas que incluam alimentos fritos, gordurosos ou carne são necessárias pelo menos 8 horas de jejum.</div></td></tr>
-<tr class="ftr" data-fast="f4"><td class="tck-fast no-print"><input type="checkbox" class="fast-chk" data-fast="f4" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#0e7490"></td><td class="fast-bull">&#9679;</td><td class="fast-td"><div class="fast-edit" contenteditable="true" spellcheck="false"></div></td></tr>
-<tr class="ftr" data-fast="f5"><td class="tck-fast no-print"><input type="checkbox" class="fast-chk" data-fast="f5" title="Incluir no panfleto" style="width:16px;height:16px;cursor:pointer;accent-color:#0e7490"></td><td class="fast-bull">&#9679;</td><td class="fast-td"><div class="fast-edit" contenteditable="true" spellcheck="false"></div></td></tr>
-</tbody></table></div>
-
-<div class="print-only-leg">
-<span class="pls"><span class="plsym" style="background:#dcfce7;color:#166634;border-color:#86efac">✓</span>Tomar normalmente</span>
-<span class="pls"><span class="plsym" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5">✗</span>Não tomar (suspenso)</span>
-<span class="pls"><span class="plsym" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">↓</span>Ajustar dose (ver obs.)</span>
-<span class="pleg-al">⚠ = não alterar sem orientação médica</span>
-</div>
-<div class="tscroll"><table class="dtb" id="dtb"><thead><tr>
-<th class="thck no-print">☑</th>
-<th class="thn">Medicamento</th>
-<th class="thd">DIA<br>−7</th>
-<th class="thd">DIA<br>−6</th>
-<th class="thd">DIA<br>−5</th>
-<th class="thd">DIA<br>−4</th>
-<th class="thd">DIA<br>−3</th>
-<th class="thd">DIA<br>−2</th>
-<th class="thd">DIA<br>−1</th>
-<th class="thd" style="font-size:7.5px;line-height:1.2">DIA DA<br>CIRURGIA</th>
-<th class="thr">Reintro&shy;dução</th>
-<th class="tho">Observações / Instruções</th>
-</tr></thead><tbody id="tbody"></tbody></table></div>
-<div class="bib-wrap">
-<div class="bib-hdr">Referências Bibliográficas</div>
-<ul class="bib-list">
-<li><span class="bib-num">[1]</span>Halvorsen S, et al. 2022 ESC Guidelines on cardiovascular assessment and management of patients undergoing non-cardiac surgery. <i>Eur Heart J.</i> 2022;43(39):3826–3924.</li>
-<li><span class="bib-num">[2]</span>Fleisher LA, et al. 2014 ACC/AHA Guideline on Perioperative Cardiovascular Evaluation and Management of Patients Undergoing Noncardiac Surgery. <i>J Am Coll Cardiol.</i> 2014;64(22):e77–e137.</li>
-<li><span class="bib-num">[3]</span>Wiles MD, et al. Diabetes and anaesthesia: joint guidelines from the Association of Anaesthetists and Diabetes UK. <i>Anaesthesia.</i> 2023;78(2):245–267.</li>
-<li><span class="bib-num">[4]</span>American Society of Anesthesiologists. Clinical Practice Advisory regarding preoperative evaluation of patients scheduled for surgery with concerns about use of GLP-1 receptor agonists. <i>ASA.</i> 2023.</li>
-<li><span class="bib-num">[5]</span>US Food &amp; Drug Administration. FDA Drug Safety Communication: SGLT2 inhibitors and risk of diabetic ketoacidosis. <i>FDA.</i> 2020.</li>
-<li><span class="bib-num">[6]</span>Douketis JD, et al. Perioperative Management of Antithrombotic Therapy: ACCP Evidence-Based Clinical Practice Guidelines, 10th ed. <i>Chest.</i> 2022;162(5):e207–e243.</li>
-<li><span class="bib-num">[7]</span>Steffel J, et al. 2021 European Heart Rhythm Association Practical Guide on the Use of Non-Vitamin K Antagonist Oral Anticoagulants. <i>Europace.</i> 2021;23(10):1612–1676.</li>
-<li><span class="bib-num">[8]</span>Narouze S, et al. Interventional Spine and Pain Procedures in Patients on Antiplatelet and Anticoagulant Medications, 2nd ed. Guidelines from ASRA Pain Medicine. <i>Reg Anesth Pain Med.</i> 2018;43(3):225–262.</li>
-<li><span class="bib-num">[9]</span>Valgimigli M, et al. 2017 ESC Guidelines on dual antiplatelet therapy in coronary artery disease. <i>Eur Heart J.</i> 2018;39(3):213–260.</li>
-<li><span class="bib-num">[10]</span>Huyse FJ, et al. Psychotropic drugs and the perioperative period: a proposal for a guideline in elective surgery. <i>Psychosomatics.</i> 2006;47(1):8–22.</li>
-<li><span class="bib-num">[11]</span>Gillman PK. Monoamine oxidase inhibitors, opioid analgesics and serotonin toxicity. <i>Br J Anaesth.</i> 2005;95(4):434–441.</li>
-<li><span class="bib-num">[12]</span>Goodman SM, et al. 2022 ACR/AAHKS Guideline for the Perioperative Management of Antirheumatic Medication in Patients with Rheumatic Diseases Undergoing Elective Total Hip or Total Knee Arthroplasty. Arthritis Rheumatol. 2022;74(9):1464–1473.</li>
-<li><span class="bib-num">[13]</span>Marik PE, Varon J. Requirement of perioperative stress doses of corticosteroids: a systematic review of the literature. <i>Arch Surg.</i> 2008;143(12):1222–1226.</li>
-<li><span class="bib-num">[14]</span>Quaye AN, Zhang Y. Perioperative Management of Buprenorphine: Solving the Conundrum. <i>Pain Med.</i> 2019;20(7):1395–1399.</li>
-<li><span class="bib-num">[15]</span>Brennan KA, Genever RW. Managing Parkinson’s disease during surgery. <i>BMJ.</i> 2010;341:c5718.</li>
-<li><span class="bib-num">[16]</span>Faculty of Sexual &amp; Reproductive Healthcare. Venous Thromboembolism (VTE) and Hormonal Contraception. <i>FSRH Clinical Guideline.</i> 2020.</li>
-<li><span class="bib-num">[17]</span>Pfeifer KJ, et al. Perioperative Management of Endocrine Disorders. <i>Open Access Emerg Med.</i> 2020;12:309–318.</li>
-<li><span class="bib-num">[18]</span>Chou R, et al. Management of Postoperative Pain: A Clinical Practice Guideline from the American Pain Society, ASRA and ASA. <i>J Pain.</i> 2016;17(2):131–157.</li>
-</ul>
-</div>
-<div class="copyright">2026 © Marta Magalhães Moreira. Todos os direitos reservados.<div class="disclaimer">Ferramenta de suporte ao acompanhamento peri-operatório do doente cirúrgico. A responsabilidade clínica e legal é exclusiva do médico assistente e respetiva equipa multidisciplinar.</div></div>
-</div>
-<script>
-const S=[
-{id:'ah',t:'Anti-hipertensores',dr:[
-  {id:'ieca',n:'IECAs',b:'ramipril, enalapril, perindopril, lisinopril',d:[1,1,1,1,1,1,0,0],ri:'24–48h após',o:'Suspender na manhã do dia anterior. Risco de hipotensão intraoperatória grave.'},
-  {id:'ara2',n:'ARAs II (Sartans)',b:'losartan, valsartan, olmesartan, irbesartan',d:[1,1,1,1,1,1,0,0],ri:'24–48h após',o:'Suspender na manhã do dia anterior. Risco de hipotensão intraoperatória grave.'},
-  {id:'betab',n:'Beta-bloqueantes',b:'bisoprolol, metoprolol, carvedilol, nebivolol',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Nunca suspender de forma abrupta — risco de arritmia e angina.'},
-  {id:'calc',n:'Antagonistas do cálcio',b:'amlodipina, lercanidipina, nifedipina, diltiazem',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Tomar até ao dia da cirurgia com um pequeno gole de água.'},
-  {id:'diur',n:'Diuréticos',b:'hidroclorotiazida, indapamida, furosemida, torasemida',d:[1,1,1,1,1,1,0,0],ri:'24h após',o:'Suspender na manhã do dia anterior à cirurgia.'}
-]},
-{id:'ad',t:'Antidiabéticos',dr:[
-  {id:'metf',n:'Metformina',b:'Glucophage, Risidon',d:[1,1,1,1,1,0,0,0],ri:'48h após',o:'Suspender 48h antes. Risco de acidose láctica com anestesia geral.'},
-  {id:'sulf',n:'Sulfonilureias',b:'glibenclamida, gliclazida, glimepirida',d:[1,1,1,1,1,1,0,0],ri:'Quando tolerar dieta',o:'Suspender dia anterior. Risco de hipoglicemia em jejum.'},
-  {id:'sgl2',n:'Inibidores SGLT-2 ⚠',b:'empagliflozina, dapagliflozina, canagliflozina',d:[1,1,1,1,0,0,0,0],ri:'Quando tolerar dieta',o:'ATENÇÃO: suspender 72h antes. Risco de cetoacidose euglicémica.',al:1},
-  {id:'gp1s',n:'GLP-1 semanal ⚠',b:'semaglutida sc (Ozempic), dulaglutida (Trulicity)',d:[0,0,0,0,0,0,0,0],ri:'Quando tolerar dieta',o:'Última injeção semanal ≥7 dias antes. Risco de gastroparesia e aspiração.',al:1},
-  {id:'gp1d',n:'GLP-1 diário / oral',b:'liraglutida (Victoza), semaglutida oral (Rybelsus)',d:[1,1,1,1,1,1,0,0],ri:'Quando tolerar dieta',o:'Suspender no dia anterior à cirurgia.'},
-  {id:'glip',n:'Gliptinas (iDPP-4)',b:'sitagliptina, vildagliptina, saxagliptina',d:[1,1,1,1,1,1,0,0],ri:'Quando tolerar dieta',o:'Suspender no dia anterior à cirurgia.'},
-  {id:'insb',n:'Insulina basal',b:'Lantus, Toujeo, Levemir, Tresiba',d:[1,1,1,1,1,1,2,0],ri:'Retomar dose habitual',o:'Fazer 75–80% da dose na noite anterior (↓). Não tomar no dia da cirurgia.'},
-  {id:'insr',n:'Insulina rápida / prandial',b:'NovoRapid, Humalog, Apidra',d:[1,1,1,1,1,1,1,0],ri:'Quando tolerar dieta',o:'Não tomar no dia da cirurgia — estará em jejum.'}
-]},
-{id:'ac',t:'Anticoagulantes',dr:[
-  {id:'varf',n:'Varfarina',b:'Sintrom, Varfine',d:[1,1,0,0,0,0,0,0],ri:'Orientação médica (INR)',o:'Suspender 5 dias antes. Verificar INR. Pode requerer bridging com heparina.',al:1},
-  {id:'riva',n:'Rivaroxabano',b:'Xarelto',d:[1,1,1,1,1,0,0,0],ri:'6–8h após hemostase',o:'Suspender 48h antes. Neuroaxial ou alto risco hemorrágico: 72h.'},
-  {id:'apix',n:'Apixabano',b:'Eliquis',d:[1,1,1,1,1,0,0,0],ri:'6–8h após hemostase',o:'Suspender 48h antes. Neuroaxial ou alto risco hemorrágico: 72h.'},
-  {id:'dabi',n:'Dabigatrano',b:'Pradaxa',d:[1,1,1,1,0,0,0,0],ri:'6–8h após hemostase',o:'ClCr ≥50ml/min: 48h; ClCr 30–50: 72–96h. Verificar função renal.',al:1},
-  {id:'edox',n:'Edoxabano',b:'Lixiana',d:[1,1,1,1,1,0,0,0],ri:'6–8h após hemostase',o:'Suspender 48h antes da cirurgia.'},
-  {id:'hbpp',n:'HBPM dose profilática',b:'Clexane 40mg, Fragmin 2500UI',d:[1,1,1,1,1,1,2,0],ri:'6h após cirurgia',o:'Última injeção ≥12h antes (↓). Não administrar no dia da operação.'},
-  {id:'hbpt',n:'HBPM dose terapêutica',b:'Clexane 1mg/kg, Fragmin dose alta',d:[1,1,1,1,1,1,0,0],ri:'48–72h após',o:'Última injeção ≥24h antes da cirurgia.'}
-]},
-{id:'aa',t:'Antiagregantes plaquetários',dr:[
-  {id:'aas',n:'AAS dose baixa',b:'Aspirina 100mg, Cartia 100mg',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'Prevenção 2ª (cardíaca/AVC): MANTER. Prevenção 1ª: suspender 7 dias antes. Confirmar com anestesiologista.'},
-  {id:'clop',n:'Clopidogrel ⚠',b:'Plavix, Iscover',d:[1,0,0,0,0,0,0,0],ri:'24h após',o:'ATENÇÃO: stent coronário <12 meses — NÃO suspender sem autorização do cardiologista.',al:1},
-  {id:'tica',n:'Ticagrelor ⚠',b:'Brilique',d:[1,1,0,0,0,0,0,0],ri:'24h após',o:'ATENÇÃO: stent <12 meses — confirmar com cardiologista antes de suspender.',al:1},
-  {id:'pras',n:'Prasugrel ⚠',b:'Efient',d:[0,0,0,0,0,0,0,0],ri:'24h após',o:'ATENÇÃO: suspender ≥7 dias antes. Stent recente — coordenar com cardiologista.',al:1},
-  {id:'dipi',n:'Dipiridamol',b:'Persantine, Aggrenox (associado a AAS)',d:[1,1,1,1,1,0,0,0],ri:'24h após',o:'Suspender 48h antes. Se associado a AAS: avaliar risco/benefício com anestesiologista.'}
-]},
-{id:'op',t:'Opióides',dr:[
-  {id:'tram',n:'Tramadol',b:'Tramal, Contramal, Zamadol, Nobligan',d:[1,1,1,1,1,1,1,1],ri:'Quando tolerar dieta',o:'Manter até ao dia da cirurgia. Risco de síndrome serotoninérgica com alguns anestésicos. Informar o anestesiologista.'},
-  {id:'code',n:'Codeína',b:'Codeína, Codipertussin, Neocodion',d:[1,1,1,1,1,1,1,1],ri:'Quando tolerar dieta',o:'Manter normalmente. Informar o anestesiologista da dose habitual.'},
-  {id:'morf',n:'Morfina oral',b:'MST Continus, Sevredol, Oramorph',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'MANTER. Nunca suspender abruptamente — risco de síndrome de abstinência. Informar anestesiologista para ajuste da analgesia pós-op.'},
-  {id:'oxic',n:'Oxicodona',b:'OxyContin, Targinact',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'MANTER. Nunca suspender abruptamente. Informar o anestesiologista da dose e esquema habitual.'},
-  {id:'tape',n:'Tapentadol',b:'Palexia, Yantil',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'Manter normalmente até ao dia da cirurgia. Informar o anestesiologista.'},
-  {id:'fent',n:'Fentanil adesivo transdérmico',b:'Durogesic, Matrifen, Victanyl',d:[1,1,1,1,1,1,1,1],ri:'Manter adesivo',o:'MANTER o adesivo. Não remover sem indicação do anestesiologista. Informar dose e data da última aplicação.'},
-  {id:'bupr',n:'Buprenorfina patch / sublingual',b:'Norspan, Transtec, Temgesic sublingual',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'MANTER. Pode reduzir eficácia de opióides pós-op — informar obrigatoriamente o anestesiologista.'},
-  {id:'subx',n:'Buprenorfina/naloxona ⚠',b:'Suboxone, Subutex (substituição opiácea)',d:[1,1,1,1,1,1,1,1],ri:'Orientação médica',o:'ATENÇÃO: terapia de substituição opiácea. Requer protocolo periop. específico. Não modificar sem autorização do prescritor e anestesiologista.',al:1},
-  {id:'meta',n:'Metadona ⚠',b:'Metadona (dependência / dor crónica)',d:[1,1,1,1,1,1,1,1],ri:'Retomar dose habitual',o:'ATENÇÃO: manter dose diária habitual. Risco de prolongamento QT e múltiplas interações. Informar obrigatoriamente o anestesiologista.',al:1}
-]},
-{id:'ps',t:'Psicofármacos',dr:[
-  {id:'isrs',n:'Antidepressivos ISRS / IRSN',b:'sertralina, fluoxetina, escitalopram, paroxetina, venlafaxina, duloxetina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Nunca suspender abruptamente — síndrome de descontinuação. Informar o anestesiologista (risco de síndrome serotoninérgica).'},
-  {id:'tca',n:'Antidepressivos tricíclicos',b:'amitriptilina, clomipramina, nortriptilina, imipramina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Informar o anestesiologista — risco de prolongamento QT, hipotenso ortostática e interação com epinefrina. Nunca suspender abruptamente.'},
-  {id:'imao',n:'IMAOs ⚠',b:'Irreversíveis: fenelzina, tranilcipromina | Reversível: moclobemida (Manerix)',d:[0,0,0,0,0,0,0,0],ri:'Após avaliação psiquiátrica',o:'ATENÇÃO: IMAOs irreversíveis — suspender ≥14 dias antes. Moclobemida (reversível) — suspender 24h antes. Risco grave de crise hipertensiva e síndrome serotoninérgica.',al:1},
-  {id:'benz',n:'Benzodiazepinas / Ansiolíticos',b:'alprazolam, lorazepam, diazepam, clonazepam',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Suspensão abrupta pode causar abstinência grave e convulsões.'},
-  {id:'antp',n:'Antipsicóticos',b:'quetiapina, olanzapina, risperidona, haloperidol, clozapina, aripiprazol',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Informar anestesiologista — risco de prolongamento QT e hipotensão.'},
-  {id:'adhd',n:'Metilfenidato / Fármacos ADHD',b:'metilfenidato (Ritalin, Concerta), lisdexanfetamina (Vyvanse), atomoxetina',d:[1,1,1,1,1,1,0,0],ri:'Retomar após cirurgia',o:'Suspender na manhã do dia anterior. Risco de instabilidade hemodinâmica e interações com vasopressores perioperatórios.'},
-  {id:'liti',n:'Lítio',b:'Priadel, Camcolit',d:[1,1,1,1,1,0,0,0],ri:'Quando hidratado e estável',o:'Suspender 48h antes. Verificar níveis séricos e função renal pré-operatória.'}
-]},
-{id:'ca',t:'Antiarrítmicos e fármacos cardíacos específicos',dr:[
-  {id:'digo',n:'Digoxina',b:'Lanoxin',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Verificar ECG e doseamento sérico pré-op. Risco de toxicidade com alterações eletrolíticas peri-op (K⁺, Mg²⁺).'},
-  {id:'amio',n:'Amiodarona',b:'Cordarone, Sedacoron',d:[1,1,1,1,1,1,1,1],ri:'Manter',o:'MANTER — semivida ∸58 dias, impossível suspender. Informar anestesiologista: múltiplas interações, potenciação de bloqueadores neuromusculares, bradicardia.'},
-  {id:'ivab',n:'Ivabradina',b:'Procoralan',d:[1,1,1,1,1,1,0,0],ri:'24h após',o:'Suspender na manhã do dia anterior. Informar o anestesiologista da frequência cardíaca habitual.'},
-  {id:'antiarr',n:'Flecainida / Propafenona / Sotalol',b:'flecainida (Tambocor), propafenona (Rytmonorm), sotalol (Sotalex)',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Informar o anestesiologista — risco de pró-arritmia e prolongamento QT. Verificar ECG pré-operatório.'},
-  {id:'sacub',n:'Sacubitril/Valsartan ⚠',b:'Entresto',d:[1,1,1,1,1,1,0,0],ri:'48h após (confirmar)',o:'Suspender no dia anterior (mesmo princípio dos ARAs II). Risco de hipotensão grave. Coordenar com cardiologista.',al:1}
-]},
-{id:'im',t:'Imunossupressores e biológicos',dr:[
-  {id:'mtx',n:'Metotrexato',b:'Methotrexate, Ledertrexate',d:[1,1,1,1,1,1,1,1],ri:'48–72h após (confirmar)',o:'Baixa dose (reumatoógico, ≤25mg/sem): geralmente manter segundo diretrizes ESA/EULAR 2022. Alta dose (oncológico): suspender 7 dias — coordenar com oncologista. Avaliar função renal e hemograma.'},
-  {id:'aza',n:'Azatioprina / Micofenolato / Sirolimus',b:'azatioprina (Imuran), micofenolato (CellCept, Myfortic), sirolimus (Rapamune)',d:[1,1,1,1,1,1,1,1],ri:'Retomar logo que possível',o:'MANTER. Risco aumentado de infeção periop. e toxicidade orgão-específica. Coordenar com equipa prescritora.'},
-  {id:'cicl',n:'Ciclosporina / Tacrolimus',b:'ciclosporina (Sandimmun), tacrolimus (Prograf, Advagraf)',d:[1,1,1,1,1,1,1,1],ri:'Retomar logo que possível',o:'MANTER. Monitorizar níveis séricos e função renal. Múltiplas interações. Coordenar com equipa de transplante.'},
-  {id:'bio',n:'Anti-TNF e outros biológicos ⚠',b:'adalimumab (Humira), infliximab (Remicade), etanercept (Enbrel), rituximab, tocilizumab',d:[0,0,0,0,0,0,0,0],ri:'Confirmar com reumatologista',o:'ATENÇÃO: suspender antes de cirurgia eletiva major (2–5 semi-vidas conforme fármaco). Coordenar obrigatoriamente com reumatologista/imunologista. Risco de infeção pós-op.',al:1}
-]},
-{id:'ot',t:'Outros medicamentos',dr:[
-  {id:'pde5',n:'Inibidores PDE-5 ⚠',b:'sildenafil (Viagra, Revatio), tadalafil (Cialis), vardenafil (Levitra)',d:[1,1,1,1,1,1,0,0],ri:'24h após cirurgia',o:'ATENÇÃO: suspender 48h antes. Interação grave com nitratos perioperatórios — risco de hipotensão grave e refratária.',al:1},
-  {id:'esta',n:'Estatinas (colesterol)',b:'atorvastatina, rosuvastatina, sinvastatina, fluvastatina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Efeito cardioprotetor perioperatório comprovado. Nunca suspender abruptamente.'},
-  {id:'aine',n:'Anti-inflamatórios (AINEs)',b:'ibuprofeno, naproxeno, diclofenac, meloxicam, etoricoxib',d:[1,1,1,1,0,0,0,0],ri:'Quando hemostase ok',o:'Suspender 3 dias antes. Risco de hemorragia e lesão renal aguda perioperatória.'},
-  {id:'cort',n:'Corticoides sistémicos',b:'prednisolona, deflazacorte, metilprednisolona, dexametasona',d:[1,1,1,1,1,1,1,1],ri:'Manter / ajustar dose',o:'NUNCA suspender abruptamente. Pode necessitar dose de stress perioperatória (hidrocortisona IV). Informar o anestesiologista.'},
-  {id:'baclof',n:'Baclofeno',b:'Lioresal',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente (via alternativa se oral impossível)',o:'NUNCA suspender abruptamente — síndrome de abstinência grave (convulsões, hipertermia, rabdomiólise). Tomar até ao dia da cirurgia. Se jejum prolongado, requerer forma IV ou intratecal.'},
-  {id:'ibp',n:'Inibidores da bomba de protões (IBP)',b:'omeprazol (Losec), pantoprazol (Pantoloc), lansoprazol, esomeprazol',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Reduzem volume e acidez gástrica — importante proteção contra aspiração. Tomar com pequeno gole de água.'},
-  {id:'antitir',n:'Antitiroideus',b:'metimazol (Metibasol), propiltiouracilo',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Nunca suspender — risco de tempestade tiroideia perioperatória. Tomar com gole de água no dia da cirurgia.'},
-  {id:'aepi',n:'Antiepilépticos',b:'valproato, lamotrigina, levetiracetam, carbamazepina, oxcarbazepina, lacosamida',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'NUNCA suspender. Tomar com gole de água no dia da cirurgia.'},
-  {id:'park',n:'Medicação para Parkinson',b:'levodopa/carbidopa, entacapone, rotigotina patch, pramipexole, rasagilina',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'NUNCA suspender. Tomar o mais próximo possível da hora da cirurgia. Atrasos podem precipitar crise motora.'},
-  {id:'alz',n:'Medicação para demência / Alzheimer',b:'donepezil (Aricept), rivastigmina (Exelon), galantamina (Reminyl), memantina (Ebixa)',d:[1,1,1,1,1,1,1,1],ri:'Logo que possível',o:'MANTER. Informar obrigatoriamente o anestesiologista — inibidores da acetilcolinesterase prolongam bloqueio neuromuscular e potenciam suxametónio.'},
-  {id:'tiro',n:'Hormona tiroideia',b:'Levotiroxina (Eutirox, Synthroid)',d:[1,1,1,1,1,1,1,1],ri:'Imediatamente',o:'MANTER. Tomar normalmente, incluindo no dia da cirurgia.'},
-  {id:'ralox',n:'Raloxifena / Tamoxifeno / SERMs',b:'raloxifena (Evista), tamoxifeno, bazedoxifena',d:[0,0,0,0,0,0,0,0],ri:'Confirmar com oncologista/ginecologista',o:'* Cirurgias major ou imobilização prolongada: suspender 4 semanas antes (risco tromboembólico). Cirurgias minor / ambutatório: confirmar com prescritor.'},
-  {id:'pilu',n:'Contracetivos hormonais / THS',b:'pílula, adesivo transdérmico, anel vaginal, THS menopáusica',d:[0,0,0,0,0,0,0,0],ri:'Confirmar com ginecologista',o:'* Cirurgias major: suspender 4 semanas antes (risco tromboembólico). Cirurgias minor de ambutatório: pode manter. Confirmar com o anestesiologista.'},
-  {id:'test',n:'Testosterona / Análogos androgénicos',b:'testosterona (Nebido, Testogel, Testim), esteroides anabolizantes',d:[0,0,0,0,0,0,0,0],ri:'Após cicatrização adequada',o:'* Cirurgias major: suspender 4–6 semanas antes (risco tromboembólico e policitémia). Cirurgias minor: discutir com anestesiologista.'},
-  {id:'supl',n:'Suplementos / Fitoterapêuticos',b:'ginkgo biloba, alho, ómega-3, vitamina E, equínacéa, kava, valériana, erva-de-são-joão',d:[0,0,0,0,0,0,0,0],ri:'24h após',o:'Suspender TODOS 7 dias antes. Ginkgo/alho/omega-3: antiagregantes. Erva-de-são-joão: indução CYP3A4. Valeriana/kava: sedação.'}
-]}
-];
-
-const sel=new Set();
-const CL={1:'g',0:'r',2:'a'};
-const SY={1:'✓',0:'✗',2:'↓'};
-const cl=v=>CL[v]||'n';
-const sy=v=>SY[v]||'—';
-
-const REFS={
-  ieca:[1,2],ara2:[1,2],betab:[1,2],calc:[1,2],diur:[1,2],
-  metf:[3],sulf:[3],sgl2:[3,5],gp1s:[3,4],gp1d:[3,4],glip:[3],insb:[3],insr:[3],
-  varf:[6],riva:[7,8],apix:[7,8],dabi:[7,8],edox:[7,8],hbpp:[6,8],hbpt:[6,8],
-  aas:[9],clop:[9],tica:[9],pras:[9],dipi:[9],
-  tram:[18],code:[18],morf:[18],oxic:[18],tape:[18],fent:[18],bupr:[14,18],subx:[14,18],meta:[14,18],
-  isrs:[10],tca:[10],imao:[10,11],benz:[10],antp:[10],adhd:[10],liti:[10],baclof:[10],alz:[10],
-  digo:[1],amio:[1],ivab:[1],antiarr:[1],sacub:[1],pde5:[1],
-  mtx:[12],aza:[12],cicl:[12],bio:[12],
-  esta:[1,2],aine:[6],cort:[13],aepi:[1],park:[15],
-  antitir:[17],tiro:[17],pilu:[16],ralox:[16],test:[16],ibp:[1],supl:[6,9]
-};
-function cycleDay(cell){
-  const c=[1,0,2];
-  let v=parseInt(cell.dataset.v);
-  let i=c.indexOf(v); i=i<0?0:(i+1)%c.length;
-  const nv=c[i];
-  cell.dataset.v=nv; cell.textContent=sy(nv); cell.className='tdd '+cl(nv);
+/* ── HERO ────────────────────────────────────── */
+.hero{
+  background:var(--bg);
+  min-height:48vh;
+  display:flex;align-items:center;
+  padding:72px 10% 64px;
+  gap:64px;
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.mono-wrap{position:relative;width:240px;height:190px;flex-shrink:0}
+.mono-a{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:80px;font-weight:300;
+  color:var(--accent);
+  position:absolute;left:0;bottom:0;
+  line-height:1;opacity:.50;user-select:none;
+}
+.mono-b{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:132px;font-weight:300;
+  color:var(--accent);
+  position:absolute;left:52px;bottom:0;
+  line-height:1;opacity:.68;user-select:none;
+}
+.mono-c{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:200px;font-weight:300;
+  color:var(--accent);
+  position:absolute;left:118px;bottom:-12px;
+  line-height:1;opacity:.84;user-select:none;
+}
+.hero-text{flex:1;min-width:0}
+.hero-name{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(18px,2.6vw,38px);
+  font-weight:400;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--ink);
+  line-height:1.15;
+  white-space:nowrap;
+}
+.hero-rule{width:100%;height:1px;background:var(--ink);margin:18px 0 14px}
+.hero-sub{
+  font-family:'Jost',Arial,sans-serif;
+  font-size:11px;font-weight:300;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--ink-m);
+  line-height:2.4;
 }
 
-function updateCnt(){
-  const n=sel.size;
-  document.getElementById('cnt').textContent=n===1?'1 selecionado':n+' selecionados';
+/* ── MAIN ────────────────────────────────────── */
+.wrap{max-width:1080px;margin:0 auto;padding:64px 32px 80px}
+
+/* ── SECTION LABEL ───────────────────────────── */
+.sec-lbl{
+  font-family:'Jost',Arial,sans-serif;
+  font-size:9.5px;font-weight:400;
+  letter-spacing:.25em;text-transform:uppercase;
+  color:var(--ink-l);
+  margin-bottom:32px;
+  display:flex;align-items:center;gap:16px;
+}
+.sec-lbl::before,.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── GRID ────────────────────────────────────── */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1px;
+  background:var(--border);
+  border:1px solid var(--border);
+  margin-bottom:64px;
 }
 
-function updateCat(catId){
-  const hasSel=S.find(s=>s.id===catId).dr.some(d=>sel.has(d.id));
-  document.querySelector('tr.catrow[data-cat="'+catId+'"]').classList.toggle('cat-sel',hasSel);
+/* ── CARD ────────────────────────────────────── */
+.card{
+  background:var(--white);
+  padding:32px 28px 28px;
+  display:flex;flex-direction:column;
+  transition:background .2s;
 }
-
-function setDrug(id,catId,on){
-  const tr=document.querySelector('tr.dtr[data-drug="'+id+'"]');
-  if(!tr)return;
-  if(on){sel.add(id);tr.classList.add('sel');}else{sel.delete(id);tr.classList.remove('sel');}
-  updateCat(catId); updateCnt();
+.card:hover:not(.soon){background:#fff}
+.card.soon{background:var(--bg2)}
+.card-tag{
+  font-size:9px;font-weight:400;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent-d);margin-bottom:14px;
 }
-
-function setCat(catId,on){
-  S.find(s=>s.id===catId).dr.forEach(d=>{
-    const chk=document.querySelector('.dchk[data-id="'+d.id+'"]');
-    if(chk){chk.checked=on;setDrug(d.id,catId,on);}
-  });
+.card-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:20px;font-weight:500;
+  color:var(--ink);line-height:1.35;
+  margin-bottom:18px;
 }
-
-function clearAll(){
-  [...sel].forEach(id=>{
-    const c=document.querySelector('.dchk[data-id="'+id+'"]');
-    if(c)c.checked=false;
-    const tr=document.querySelector('tr.dtr[data-drug="'+id+'"]');
-    if(tr)tr.classList.remove('sel');
-  });
-  sel.clear();
-  document.querySelectorAll('tr.catrow').forEach(r=>r.classList.remove('cat-sel'));
-  document.querySelectorAll('.cchk').forEach(c=>c.checked=false);
-  document.querySelectorAll('.care-chk').forEach(ch=>ch.checked=false);
-  document.querySelectorAll('.ctr').forEach(r=>r.classList.remove('sel'));
-  const cw=document.getElementById('care-wrap');
-  if(cw)cw.classList.add('care-empty');
-  document.querySelectorAll('.fast-chk').forEach(ch=>ch.checked=false);
-  document.querySelectorAll('.ftr').forEach(r=>r.classList.remove('sel'));
-  const fw=document.getElementById('fast-wrap');
-  if(fw)fw.classList.add('fast-empty');
-  updateCnt();
+.card.soon .card-title{color:var(--ink-l)}
+.card-rule{width:28px;height:1px;background:var(--accent);margin-bottom:16px}
+.card.soon .card-rule{background:var(--border)}
+.card-desc{
+  font-size:12px;font-weight:300;
+  color:var(--ink-m);line-height:1.85;
+  flex:1;margin-bottom:28px;
 }
-
-function buildTbl(){
-  const tb=document.getElementById('tbody');
-  S.forEach(sec=>{
-    const ch=document.createElement('tr');
-    ch.className='catrow'; ch.dataset.cat=sec.id;
-    const tc=document.createElement('td'); tc.className='tc no-print';
-    const cc=document.createElement('input'); cc.type='checkbox'; cc.className='cchk'; cc.title='Selecionar todos';
-    cc.addEventListener('change',e=>setCat(sec.id,e.target.checked));
-    tc.appendChild(cc);
-    const td=document.createElement('td'); td.colSpan=11; td.textContent=sec.t;
-    ch.appendChild(tc); ch.appendChild(td); tb.appendChild(ch);
-    sec.dr.forEach(d=>{
-      const tr=document.createElement('tr');
-      tr.className='dtr'; tr.dataset.drug=d.id; tr.dataset.cat=sec.id;
-      const tck=document.createElement('td'); tck.className='tck no-print';
-      const chk=document.createElement('input'); chk.type='checkbox'; chk.className='dchk'; chk.dataset.id=d.id; chk.title='Incluir no panfleto';
-      chk.addEventListener('change',e=>setDrug(d.id,sec.id,e.target.checked));
-      tck.appendChild(chk); tr.appendChild(tck);
-      const tn=document.createElement('td'); tn.className='tdn';
-      const rfs=REFS[d.id]?REFS[d.id].map(r=>'<sup class="ref">['+r+']</sup>').join(''):'';tn.innerHTML='<div class="dn">'+d.n+rfs+'</div><div class="db">ex. '+d.b+'</div>';
-      tr.appendChild(tn);
-      d.d.forEach(v=>{
-        const td=document.createElement('td'); td.className='tdd '+cl(v); td.dataset.v=v;
-        td.textContent=sy(v); td.title='Clique para alterar';
-        td.addEventListener('click',()=>cycleDay(td)); tr.appendChild(td);
-      });
-      const ri=document.createElement('td'); ri.className='tdr'; ri.contentEditable='true'; ri.spellcheck=false; ri.title='Clique para editar'; ri.textContent=d.ri; tr.appendChild(ri);
-      const ot=document.createElement('td'); ot.className='tdo';
-      const ob=document.createElement('div'); ob.className='obe'+(d.al?' alrt':'');
-      ob.contentEditable='true'; ob.spellcheck=false; ob.title='Clique para editar'; ob.textContent=d.o;
-      ot.appendChild(ob); tr.appendChild(ot); tb.appendChild(tr);
-    });
-  });
-  // 3 linhas personalizáveis para o médico preencher
-  const custIds=['custom1','custom2','custom3'];
-  const custCat=document.createElement('tr');
-  custCat.className='catrow'; custCat.dataset.cat='custom';
-  const custTc=document.createElement('td'); custTc.className='tc no-print';
-  const custCc=document.createElement('input'); custCc.type='checkbox'; custCc.className='cchk'; custCc.title='Selecionar todos';
-  custCc.addEventListener('change',e=>custIds.forEach(cid=>{const ch=document.querySelector('.dchk[data-id="'+cid+'"]');if(ch){ch.checked=e.target.checked;ch.dispatchEvent(new Event('change'));}}));
-  custTc.appendChild(custCc);
-  const custTd=document.createElement('td'); custTd.colSpan=11; custTd.textContent='Outros fármacos (a preencher pelo médico)';
-  custCat.appendChild(custTc); custCat.appendChild(custTd); tb.appendChild(custCat);
-  custIds.forEach(cid=>{
-    const tr=document.createElement('tr'); tr.className='dtr'; tr.dataset.drug=cid; tr.dataset.cat='custom';
-    const tck=document.createElement('td'); tck.className='tck no-print';
-    const chk=document.createElement('input'); chk.type='checkbox'; chk.className='dchk'; chk.dataset.id=cid; chk.title='Incluir no panfleto';
-    chk.addEventListener('change',e=>{
-      if(e.target.checked){sel.add(cid);tr.classList.add('sel');}else{sel.delete(cid);tr.classList.remove('sel');}
-      custCat.classList.toggle('cat-sel',custIds.some(c=>sel.has(c)));
-      updateCnt();
-    });
-    tck.appendChild(chk); tr.appendChild(tck);
-    const tn=document.createElement('td'); tn.className='tdn';
-    const dn=document.createElement('div'); dn.className='dn'; dn.contentEditable='true'; dn.spellcheck=false; dn.title='Nome do fármaco'; dn.style.cssText='min-height:16px;border-bottom:1px dashed #93c5fd;outline:none;cursor:text';
-    const db=document.createElement('div'); db.className='db'; db.contentEditable='true'; db.spellcheck=false; db.title='Exemplos'; db.style.cssText='min-height:11px;border-bottom:1px dashed #d1d5db;outline:none;cursor:text'; db.textContent='ex. ';
-    tn.appendChild(dn); tn.appendChild(db); tr.appendChild(tn);
-    for(let j=0;j<8;j++){const td=document.createElement('td');td.className='tdd n';td.dataset.v='-1';td.textContent='—';td.title='Clique para alterar';td.addEventListener('click',()=>cycleDay(td));tr.appendChild(td);}
-    const ri=document.createElement('td'); ri.className='tdr'; ri.contentEditable='true'; ri.spellcheck=false; ri.title='Clique para editar'; tr.appendChild(ri);
-    const ot=document.createElement('td'); ot.className='tdo';
-    const ob=document.createElement('div'); ob.className='obe'; ob.contentEditable='true'; ob.spellcheck=false; ob.title='Clique para editar';
-    ot.appendChild(ob); tr.appendChild(ot); tb.appendChild(tr);
-  });
+.card.soon .card-desc{color:var(--ink-l)}
+.card-foot{
+  display:flex;align-items:center;
+  justify-content:space-between;gap:12px;
+  padding-top:16px;border-top:1px solid var(--border);
 }
-buildTbl();
-
-// Care instructions checkbox logic
-function updateCareWrap(){
-  const any=document.querySelector('.ctr.sel');
-  const cw=document.getElementById('care-all');
-  document.getElementById('care-wrap').classList.toggle('care-empty',!any);
-  if(cw)cw.checked=!!(any)&&document.querySelectorAll('.ctr:not(.sel)').length===0;
+.card-st{
+  font-size:9px;font-weight:400;
+  letter-spacing:.14em;text-transform:uppercase;
 }
-document.querySelectorAll('.care-chk').forEach(function(chk){
-  chk.addEventListener('change',function(e){
-    const id=e.target.dataset.care;
-    const tr=document.querySelector('tr.ctr[data-care="'+id+'"]');
-    if(!tr)return;
-    tr.classList.toggle('sel',e.target.checked);
-    updateCareWrap();
-  });
-});
-const careAll=document.getElementById('care-all');
-if(careAll)careAll.addEventListener('change',function(e){
-  document.querySelectorAll('.care-chk').forEach(function(ch){
-    ch.checked=e.target.checked;
-    ch.dispatchEvent(new Event('change'));
-  });
-});
-
-// Fasting section checkbox logic
-function updateFastWrap(){
-  const any=document.querySelector('.ftr.sel');
-  document.getElementById('fast-wrap').classList.toggle('fast-empty',!any);
-  const fa=document.getElementById('fast-all');
-  if(fa)fa.checked=!!(any)&&document.querySelectorAll('.ftr:not(.sel)').length===0;
+.st-ok{color:#6b8a6b}
+.st-wip{color:var(--accent-d)}
+.st-soon{color:var(--ink-l)}
+.btn{
+  font-family:'Jost',Arial,sans-serif;
+  font-size:9.5px;font-weight:400;
+  letter-spacing:.16em;text-transform:uppercase;
+  padding:9px 22px;border:1px solid;
+  text-decoration:none;display:inline-block;
+  transition:all .18s;cursor:pointer;
 }
-document.querySelectorAll('.fast-chk').forEach(function(chk){
-  chk.addEventListener('change',function(e){
-    const id=e.target.dataset.fast;
-    const tr=document.querySelector('tr.ftr[data-fast="'+id+'"]');
-    if(!tr)return;
-    tr.classList.toggle('sel',e.target.checked);
-    updateFastWrap();
-  });
-});
-const fastAll=document.getElementById('fast-all');
-if(fastAll)fastAll.addEventListener('change',function(e){
-  document.querySelectorAll('.fast-chk').forEach(function(ch){
-    ch.checked=e.target.checked;
-    ch.dispatchEvent(new Event('change'));
-  });
-});
+.btn-dark{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn-dark:hover{background:transparent;color:var(--ink)}
+.btn-off{background:transparent;color:var(--border);border-color:var(--border);cursor:not-allowed}
 
-</script></body></html>
+/* ── ABOUT ───────────────────────────────────── */
+.about{
+  display:flex;gap:40px;align-items:flex-start;
+  padding:4px 0 0;
+}
+.about-m{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:72px;font-weight:300;
+  color:var(--accent);opacity:.45;
+  line-height:1;flex-shrink:0;user-select:none;
+  margin-top:-8px;
+}
+.about-body h2{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:22px;font-weight:400;
+  letter-spacing:.06em;
+  color:var(--ink);margin-bottom:14px;
+}
+.about-body p{
+  font-size:12.5px;font-weight:300;
+  color:var(--ink-m);line-height:1.95;
+  margin-bottom:10px;
+}
+.about-body p:last-child{margin-bottom:0}
+
+/* ── FOOTER ──────────────────────────────────── */
+footer{
+  border-top:1px solid var(--border);
+  padding:28px 32px;
+  text-align:center;
+  background:var(--bg);
+}
+.f-copy{
+  font-size:9.5px;font-weight:300;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--ink-l);line-height:2.2;
+}
+.f-disc{
+  font-size:10px;font-weight:300;
+  color:var(--ink-l);opacity:.65;
+  margin-top:5px;max-width:580px;
+  margin-left:auto;margin-right:auto;
+  line-height:1.7;
+}
+.hero-contact{
+  margin-top:22px;padding-top:18px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.c-link{
+  font-size:10px;font-weight:300;
+  letter-spacing:.12em;
+  color:var(--ink-m);text-decoration:none;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:color .15s;
+}
+.c-link:hover{color:var(--ink)}
+.c-link svg{opacity:.7;flex-shrink:0}
+.c-sep{color:var(--border);font-size:13px}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media(max-width:700px){
+  .hero{flex-direction:column;align-items:center;text-align:center;padding:52px 24px 44px;gap:28px}
+  .mono-wrap{width:185px;height:145px}
+  .mono-a{font-size:60px}
+  .mono-b{font-size:100px;left:40px}
+  .mono-c{font-size:152px;left:90px;bottom:-8px}
+  .hero-name{white-space:normal;font-size:clamp(20px,6vw,32px)}
+  .hero-rule{margin:14px auto 12px}
+  .wrap{padding:52px 20px 64px}
+  .about{flex-direction:column;gap:14px}
+  .about-m{font-size:48px}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="mono-wrap" aria-hidden="true">
+    <span class="mono-a">M</span>
+    <span class="mono-b">M</span>
+    <span class="mono-c">M</span>
+  </div>
+  <div class="hero-text">
+    <h1 class="hero-name">Marta Magalhães Moreira</h1>
+    <div class="hero-rule"></div>
+    <div class="hero-sub">Anestesiologia<br>Informática em Saúde</div>
+    <div class="hero-contact">
+      <a href="https://www.linkedin.com/in/marta-moreira-b980293a7/" target="_blank" rel="noopener" class="c-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        LinkedIn
+      </a>
+      <span class="c-sep">&middot;</span>
+      <a href="mailto:marta.moreira.m@gmail.com" class="c-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        marta.moreira.m@gmail.com
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="wrap">
+
+  <div class="sec-lbl">Ferramentas</div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-tag">Anestesiologia &middot; Pré-operatório &middot; Farmacologia</div>
+      <div class="card-title">Guia de Gestão Pré-Operatória do Doente Cirúrgico</div>
+      <div class="card-rule"></div>
+      <div class="card-desc">Orientação individualizada da terapêutica farmacológica no período pré-operatório. Tabela de suspensão por classes farmacológicas — editável e pronta a imprimir em PDF.</div>
+      <div class="card-foot">
+        <span class="card-st st-ok">&#9679;&nbsp;Disponível</span>
+        <a href="guia-gestao-pre-operatoria.html" target="_blank" class="btn btn-dark">Abrir</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-tag">Anestesiologia &middot; Pediatria &middot; Urgência</div>
+      <div class="card-title">Calculadora Pediátrica de Anestesiologia</div>
+      <div class="card-rule"></div>
+      <div class="card-desc">Cálculo de doses farmacológicas em pediatria por peso e idade. Dez grupos farmacológicos, sinais vitais de referência, via aérea e protocolos de emergência.</div>
+      <div class="card-foot">
+        <span class="card-st st-ok">&#9679;&nbsp;Disponível</span>
+        <a href="calculadora_pediatrica.html" target="_blank" class="btn btn-dark">Abrir</a>
+      </div>
+    </div>
+
+    <div class="card soon">
+      <div class="card-tag">Anestesiologia &middot; Risco cirúrgico &middot; IA</div>
+      <div class="card-title">Avaliação de Risco Anestésico</div>
+      <div class="card-rule"></div>
+      <div class="card-desc">Cálculo automático de ASA, Índice de Lee, Score de Apfel e dificuldade de via aérea. Importação de documentos clínicos assistida por inteligência artificial.</div>
+      <div class="card-foot">
+        <span class="card-st st-wip">&#9900;&nbsp;Em desenvolvimento</span>
+        <span class="btn btn-off">Em breve</span>
+      </div>
+    </div>
+
+    <div class="card soon">
+      <div class="card-tag">Anestesiologia &middot; Dor &middot; Pós-operatório</div>
+      <div class="card-title">Gestão da Dor Aguda Pós-Operatória</div>
+      <div class="card-rule"></div>
+      <div class="card-desc">Protocolos de analgesia multimodal e orientação farmacológica adaptada ao tipo de cirurgia e perfil clínico do doente.</div>
+      <div class="card-foot">
+        <span class="card-st st-soon">&#9900;&nbsp;Planeado</span>
+        <span class="btn btn-off">Em breve</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sec-lbl">Sobre</div>
+
+  <div class="about">
+    <div class="about-m" aria-hidden="true">MMM</div>
+    <div class="about-body">
+      <h2>Marta Magalhães Moreira</h2>
+      <p>Médica especialista em Anestesiologia, com diferenciação nas áreas da Dor e da Saúde Digital. Estas ferramentas resultam da prática clínica diária e foram desenvolvidas com o objetivo de tornar a prestação de cuidados mais segura, eficiente e sustentada na melhor evidência científica disponível. São disponibilizadas de forma gratuita, como um contributo para a melhoria dos cuidados de saúde e para a promoção da inovação clínica em Portugal.</p>
+      <p>As ferramentas incorporam recomendações das principais sociedades científicas internacionais e destinam-se a apoiar a decisão clínica. A responsabilidade clínica e legal permanece sempre exclusivamente do médico assistente e da respetiva equipa multidisciplinar.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="f-copy">2026 &copy; Marta Magalhães Moreira &nbsp;&middot;&nbsp; Todos os direitos reservados</div>
+  <div style="display:flex;justify-content:center;align-items:center;gap:20px;margin-top:10px;flex-wrap:wrap">
+    <a href="https://www.linkedin.com/in/marta-moreira-b980293a7/" target="_blank" rel="noopener" class="c-link">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      LinkedIn
+    </a>
+    <span class="c-sep">&middot;</span>
+    <a href="mailto:marta.moreira.m@gmail.com" class="c-link">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      marta.moreira.m@gmail.com
+    </a>
+  </div>
+  <div class="f-disc">Ferramentas de suporte ao acompanhamento peri-operatório do doente cirúrgico. A responsabilidade clínica e legal é exclusiva do médico assistente e respetiva equipa multidisciplinar.</div>
+</footer>
+
+</body>
+</html>
