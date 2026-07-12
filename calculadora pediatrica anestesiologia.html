@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anestesia Pediátrica</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#eef2f7;color:#1a202c;min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#1a365d 0%,#2b6cb0 100%);color:#fff;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.header-left h1{font-size:22px;font-weight:800;letter-spacing:.3px}
+.header-left p{font-size:12px;opacity:.75;margin-top:3px}
+.header-badge{background:rgba(255,255,255,.15);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;letter-spacing:.4px;text-align:center}
+.header-badge span{display:block;font-size:18px;font-weight:800}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:320px 1fr;gap:20px;max-width:1200px;margin:24px auto;padding:0 24px}
+@media(max-width:860px){.layout{grid-template-columns:1fr;padding:0 12px;margin:12px auto}}
+
+/* ── PATIENT PANEL ── */
+.patient-panel{background:#fff;border-radius:16px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.08);height:fit-content;position:sticky;top:20px}
+.panel-title{font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px}
+.inputs-row{display:flex;gap:10px;margin-bottom:4px}
+.inp-grp{flex:1;display:flex;flex-direction:column;align-items:center}
+.inp-grp .lbl{font-size:11px;color:#718096;font-weight:600;margin-bottom:4px;align-self:flex-start}
+.inp-grp input{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 6px;font-size:18px;text-align:center;outline:none;transition:border-color .2s,box-shadow .2s;background:#fafbfc}
+.inp-grp input:focus{border-color:#2b6cb0;box-shadow:0 0 0 3px rgba(43,108,176,.12);background:#fff}
+.inp-grp .unit{font-size:10px;color:#a0aec0;margin-top:3px}
+.unit-toggle{display:flex;margin-top:5px;border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;width:100%}
+.unit-toggle button{flex:1;padding:5px 0;font-size:10px;font-weight:700;border:none;cursor:pointer;transition:all .2s}
+.unit-toggle button.active{background:#2b6cb0;color:#fff}
+.unit-toggle button:not(.active){background:#edf2f7;color:#718096}
+.age-hint{font-size:10px;color:#b0b8c8;text-align:center;margin:6px 0 10px}
+.calc-btn{width:100%;margin-top:4px;background:linear-gradient(135deg,#1a365d,#2b6cb0);color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s,box-shadow .2s;box-shadow:0 2px 8px rgba(43,108,176,.3);letter-spacing:.3px}
+.calc-btn:hover{opacity:.92;box-shadow:0 4px 14px rgba(43,108,176,.4)}
+.calc-btn:active{opacity:.82}
+.weight-info{margin-top:10px;font-size:12px;color:#718096;text-align:center;min-height:18px;line-height:1.6}
+.weight-info span{color:#2b6cb0;font-weight:700}
+.info-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.chip{background:#ebf8ff;color:#2b6cb0;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+.chip.warn{background:#fff5f5;color:#c53030}
+
+/* ── MAIN PANEL ── */
+.main-panel{min-width:0}
+
+/* ── TABS ── */
+.tabs{display:flex;background:#fff;border-radius:14px 14px 0 0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.tab{flex:1;padding:13px 6px 11px;text-align:center;font-size:12px;font-weight:600;color:#a0aec0;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;user-select:none}
+.tab:hover:not(.active){background:#f7faff;color:#4a5568}
+.tab.active{color:#2b6cb0;border-bottom-color:#2b6cb0;background:#f7faff}
+.tab.emerg.active{color:#c53030;border-bottom-color:#c53030;background:#fff5f5}
+.tab-icon{font-size:18px;display:block;margin-bottom:3px}
+
+/* ── CONTENT ── */
+.content{background:#fff;border-radius:0 0 14px 14px;box-shadow:0 4px 14px rgba(0,0,0,.08);padding:8px 18px 28px;min-height:400px}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.no-calc{text-align:center;padding:60px 20px;color:#cbd5e0}
+.no-calc .icon{font-size:52px;margin-bottom:12px}
+.no-calc p{font-size:14px}
+
+/* ── DRUG GROUPS ── */
+.drug-group{margin-top:12px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.grp-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;font-weight:700;font-size:14px;color:#fff;user-select:none;transition:opacity .15s}
+.grp-header:hover{opacity:.92}
+.chev{transition:transform .22s;font-size:12px;opacity:.85}
+.grp-header.collapsed .chev{transform:rotate(180deg)}
+.grp-body{background:#fff}
+
+/* Desktop: drug rows in 2 columns */
+.drug-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+@media(max-width:700px){.drug-grid{grid-template-columns:1fr}}
+.drug-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;border-bottom:1px solid #f0f4f8;border-right:1px solid #f0f4f8}
+.drug-row:nth-child(even){border-right:none}
+@media(max-width:700px){.drug-row{border-right:none}}
+.drug-row:last-child,.drug-row:nth-last-child(2):nth-child(odd){border-bottom:none}
+.drug-name{font-size:13px;font-weight:700;color:#2d3748}
+.drug-note{font-size:10.5px;color:#a0aec0;margin-top:2px;line-height:1.35}
+.drug-right{text-align:right;min-width:96px;flex-shrink:0}
+.drug-dose{font-size:18px;font-weight:800}
+.drug-unit{font-size:10px;color:#718096}
+.drug-per-kg{font-size:10px;color:#b0b8c8;margin-top:1px}
+
+.g-indutores{background:linear-gradient(135deg,#553c9a,#7b5ea7)}
+.g-opioides{background:linear-gradient(135deg,#9b2c2c,#c53030)}
+.g-relaxantes{background:linear-gradient(135deg,#1e4e8c,#2b6cb0)}
+.g-analgésicos{background:linear-gradient(135deg,#22543d,#276749)}
+.g-antieméticos{background:linear-gradient(135deg,#9c4221,#dd6b20)}
+.g-antibióticos{background:linear-gradient(135deg,#234e52,#285e61)}
+.g-reversores{background:linear-gradient(135deg,#744210,#c05621)}
+.g-vasopressores{background:linear-gradient(135deg,#6b2323,#9b2c2c)}
+.g-fluidos{background:linear-gradient(135deg,#1a365d,#2c5282)}
+.g-anesloc{background:linear-gradient(135deg,#3d2c6b,#6b46c1)}
+.dc-indutores{color:#553c9a}.dc-opioides{color:#9b2c2c}.dc-relaxantes{color:#1e4e8c}
+.dc-analgésicos{color:#22543d}.dc-antieméticos{color:#9c4221}.dc-antibióticos{color:#234e52}
+.dc-reversores{color:#744210}.dc-vasopressores{color:#6b2323}.dc-fluidos{color:#1a365d}
+.dc-anesloc{color:#3d2c6b}
+
+/* ── VITALS ── */
+.sec-label{font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.6px;margin:16px 2px 8px}
+.vitals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.vitals-grid{grid-template-columns:1fr}}
+.v-card,.a-card,.e-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px}
+.v-header,.a-header,.e-header{padding:11px 16px;font-weight:700;font-size:13px;color:#fff}
+.vh-fc{background:linear-gradient(135deg,#9b2c2c,#c53030)}
+.vh-resp{background:linear-gradient(135deg,#1e4e8c,#2b6cb0)}
+.vh-pa{background:linear-gradient(135deg,#22543d,#276749)}
+.v-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f0f4f8}
+.v-row:last-child{border-bottom:none}
+.v-lbl{font-size:12.5px;color:#4a5568;font-weight:500;flex:1}
+.v-lbl small{display:block;font-size:10px;color:#a0aec0;font-weight:400}
+.v-val{font-size:16px;font-weight:800;color:#2b6cb0;white-space:nowrap;margin-left:8px}
+.v-val.danger{color:#c53030}
+.v-val .vu{font-size:10px;color:#718096;font-weight:500}
+
+/* ── AIRWAY grid ── */
+.airway-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.airway-grid{grid-template-columns:1fr}}
+.ah-tot{background:linear-gradient(135deg,#2c5282,#3182ce)}
+.ah-laring{background:linear-gradient(135deg,#553c9a,#7b5ea7)}
+.ah-lma{background:linear-gradient(135deg,#276749,#38a169)}
+.ah-mask{background:linear-gradient(135deg,#9c4221,#dd6b20)}
+.ah-naso{background:linear-gradient(135deg,#285e61,#319795)}
+.a-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f0f4f8}
+.a-row:last-child{border-bottom:none}
+.a-lbl{font-size:12.5px;color:#4a5568;font-weight:500}
+.a-lbl small{display:block;font-size:10px;color:#a0aec0}
+.a-val{font-size:18px;font-weight:800;color:#2c5282;white-space:nowrap;margin-left:8px}
+.a-val .av-u{font-size:11px;color:#718096;font-weight:500}
+.lma-table{width:100%;font-size:11px;border-collapse:collapse}
+.lma-table th{background:#f0f4f8;color:#4a5568;padding:5px 8px;text-align:center;font-weight:600}
+.lma-table td{padding:5px 8px;text-align:center;border-bottom:1px solid #f0f4f8;color:#2d3748}
+.lma-table tr.active-row td{background:#ebf8ff;color:#2b6cb0;font-weight:700}
+.warn-box{margin:12px 0;padding:11px 14px;background:#fffbeb;border-radius:10px;border:1px solid #f6ad55;font-size:12px;color:#92400e;line-height:1.6}
+
+/* ── EMERGENCY ── */
+.emerg-banner{background:linear-gradient(135deg,#742a2a,#c53030);color:#fff;border-radius:12px;padding:16px 18px;margin-top:12px;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.emerg-banner h3{font-size:16px;font-weight:800}
+.emerg-banner p{font-size:12px;opacity:.9;margin-top:4px;line-height:1.7}
+.emerg-stats{display:flex;gap:20px;flex-wrap:wrap}
+.emerg-stat{background:rgba(255,255,255,.15);border-radius:8px;padding:6px 14px;text-align:center}
+.emerg-stat .es-val{font-size:20px;font-weight:800}
+.emerg-stat .es-lbl{font-size:10px;opacity:.8;margin-top:1px}
+.emerg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:700px){.emerg-grid{grid-template-columns:1fr}}
+.eh-pcr{background:linear-gradient(135deg,#742a2a,#c53030)}
+.eh-defib{background:linear-gradient(135deg,#553c9a,#7b5ea7)}
+.eh-conv{background:linear-gradient(135deg,#1e4e8c,#2b6cb0)}
+.eh-anaf{background:linear-gradient(135deg,#744210,#c05621)}
+.eh-hipo{background:linear-gradient(135deg,#22543d,#276749)}
+.eh-brad{background:linear-gradient(135deg,#285e61,#319795)}
+.e-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 14px;border-bottom:1px solid #f0f4f8}
+.e-row:last-child{border-bottom:none}
+.e-lbl{font-size:12.5px;color:#4a5568;font-weight:600;flex:1;padding-right:8px}
+.e-lbl small{display:block;font-size:10px;color:#a0aec0;font-weight:400;margin-top:2px;line-height:1.3}
+.e-val{text-align:right;min-width:76px;flex-shrink:0}
+.e-dose{font-size:16px;font-weight:800;color:#c53030}
+.e-unit{font-size:10px;color:#718096}
+.e-per{font-size:10px;color:#b0b8c8}
+.e-info{background:#fff5f5;padding:8px 14px;font-size:11px;color:#742a2a;line-height:1.6;border-top:1px solid #fed7d7}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:16px;font-size:11px;color:#a0aec0;max-width:1200px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🩺 Calculadora de Anestesia Pediátrica</h1>
+    <p>Doses · Sinais Vitais · Via Aérea · Emergência</p>
+  </div>
+  <div class="header-badge">
+    <span>👶</span>Pediátrica
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── PATIENT PANEL ── -->
+  <div class="patient-panel">
+    <div class="panel-title">📋 Dados do Doente</div>
+    <div class="inputs-row">
+      <div class="inp-grp" style="flex:1.5">
+        <span class="lbl">Idade</span>
+        <input type="number" id="inp-idade" placeholder="ex: 3" min="0" max="18" step="1">
+        <div class="unit-toggle">
+          <button id="btn-anos" class="active" onclick="setIdadeUnit('anos')">Anos</button>
+          <button id="btn-meses" onclick="setIdadeUnit('meses')">Meses</button>
+        </div>
+      </div>
+      <div class="inp-grp">
+        <span class="lbl">Peso</span>
+        <input type="number" id="inp-peso" placeholder="—" min="0.5" max="120" step="0.1">
+        <span class="unit">kg</span>
+      </div>
+      <div class="inp-grp">
+        <span class="lbl">Altura</span>
+        <input type="number" id="inp-altura" placeholder="—" min="30" max="200" step="1">
+        <span class="unit">cm</span>
+      </div>
+    </div>
+    <div class="age-hint">Selecciona a unidade antes de inserir a idade</div>
+    <button class="calc-btn" onclick="calcular()">⚡ Calcular Doses</button>
+    <div id="winfo" class="weight-info"></div>
+    <div id="chips" class="info-chips"></div>
+  </div>
+
+  <!-- ── MAIN PANEL ── -->
+  <div class="main-panel">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('farmacos',this)"><span class="tab-icon">💊</span>Fármacos</div>
+      <div class="tab" onclick="switchTab('vitais',this)"><span class="tab-icon">📊</span>Sinais Vitais</div>
+      <div class="tab" onclick="switchTab('viaarea',this)"><span class="tab-icon">🫁</span>Via Aérea</div>
+      <div class="tab emerg" onclick="switchTab('emergencia',this)"><span class="tab-icon">🚨</span>Emergência</div>
+    </div>
+    <div class="content">
+      <div class="tab-pane active" id="tab-farmacos">
+        <div id="farmacos-out"><div class="no-calc"><div class="icon">💊</div><p>Insere os dados do doente e clica em <strong>Calcular Doses</strong></p></div></div>
+      </div>
+      <div class="tab-pane" id="tab-vitais">
+        <div id="vitais-out"><div class="no-calc"><div class="icon">📊</div><p>Insere os dados do doente e clica em <strong>Calcular Doses</strong></p></div></div>
+      </div>
+      <div class="tab-pane" id="tab-viaarea">
+        <div id="viaarea-out"><div class="no-calc"><div class="icon">🫁</div><p>Insere os dados do doente e clica em <strong>Calcular Doses</strong></p></div></div>
+      </div>
+      <div class="tab-pane" id="tab-emergencia">
+        <div id="emerg-out"><div class="no-calc"><div class="icon">🚨</div><p>Insere os dados do doente e clica em <strong>Calcular Doses</strong></p></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .layout -->
+
+<div class="footer">⚠️ Ferramenta de apoio clínico. Confirmar sempre doses antes de administrar. Responsabilidade clínica do médico prescritor.</div>
+
+<script>
+/* ── IDADE UNIT ── */
+var idadeUnit='anos';
+function setIdadeUnit(u){
+  idadeUnit=u;
+  var inp=document.getElementById('inp-idade');
+  inp.value='';inp.max=u==='anos'?18:216;inp.step=1;
+  inp.placeholder=u==='anos'?'ex: 3':'ex: 18';
+  document.getElementById('btn-anos').className=u==='anos'?'active':'';
+  document.getElementById('btn-meses').className=u==='meses'?'active':'';
+}
+function getIdadeAnos(){
+  var v=parseFloat(document.getElementById('inp-idade').value)||0;
+  return idadeUnit==='meses'?v/12:v;
+}
+
+/* ── DRUG DATABASE ── */
+var DRUGS=[
+  {key:'indutores',label:'Indutores',icon:'💜',grpClass:'g-indutores',dcClass:'dc-indutores',items:[
+    {name:'Propofol',   min:2,    max:3,   unit:'mg',  note:'IV lento · reduzir em lactentes e ASA >II'},
+    {name:'Ketamina',   min:1,    max:2,   unit:'mg',  note:'IV · IM: 4–6 mg/kg · broncodilatador'},
+    {name:'Etomidato',  min:0.2,  max:0.3, unit:'mg',  note:'IV · evitar em sépsis / insuf. suprarrenal'},
+    {name:'Tiopental',  min:3,    max:5,   unit:'mg',  note:'IV · reduzir em hipovolemia'},
+    {name:'Midazolam',  min:0.05, max:0.1, unit:'mg',  maxD:5, note:'IV · pré-medicação PO: 0.5 mg/kg · máx 5 mg'},
+  ]},
+  {key:'opioides',label:'Opioides',icon:'❤️',grpClass:'g-opioides',dcClass:'dc-opioides',items:[
+    {name:'Fentanil',              min:1,    max:2,   unit:'mcg',        note:'IV · indução / analgesia intraop'},
+    {name:'Remifentanil perf. IV', min:0.05, max:0.2, unit:'mcg/kg/min', calcResult:true, resultUnit:'mcg/min', note:'Perfusão IV · iniciar 0.05 · titular por efeito · apneia frequente'},
+    {name:'Morfina',               min:0.05, max:0.1, unit:'mg',         note:'IV · titulação lenta · analgesia prolongada'},
+    {name:'Alfentanil',            min:10,   max:20,  unit:'mcg',        note:'IV · início rápido · duração curta'},
+    {name:'Petidina',              min:0.5,  max:1,   unit:'mg',         note:'IV · evitar em neonatos · alternativa morfina'},
+    {name:'Tramadol',              min:1,    max:2,   unit:'mg',  maxD:100, note:'IV lento 15 min · >1 ano · máx 100 mg · 6/6h'},
+  ]},
+  {key:'relaxantes',label:'Relaxantes Musculares',icon:'💙',grpClass:'g-relaxantes',dcClass:'dc-relaxantes',items:[
+    {name:'Succinilcolina', min:1,   max:2,   unit:'mg', note:'IV · lactentes: 2 mg/kg · RSI · contra-ind. miopatias'},
+    {name:'Rocurónio',      min:0.6, max:1.2, unit:'mg', note:'IV · RSI: 1.2 mg/kg · reversão: sugammadex'},
+    {name:'Atracúrio',      min:0.3, max:0.6, unit:'mg', note:'IV · histamino-libertador moderado · evitar asma/atopia grave'},
+    {name:'Cisatracúrio',   min:0.1, max:0.2, unit:'mg', note:'IV · eliminação Hofmann · sem histamina · preferir em instáveis'},
+  ]},
+  {key:'analgésicos',label:'Analgésicos',icon:'💚',grpClass:'g-analgésicos',dcClass:'dc-analgésicos',items:[
+    {name:'Paracetamol IV', min:15,  max:15,  unit:'mg', maxD:1000, note:'IV lento 15 min · máx 1g · >10 kg'},
+    {name:'Paracetamol PO', min:10,  max:15,  unit:'mg', maxD:1000, note:'PO · todas as idades · máx 1g/dose · 6/6h'},
+    {name:'Cetorolac',      min:0.5, max:0.5, unit:'mg', maxD:30,   note:'IV · >2 anos · máx 30 mg · 6/6h'},
+    {name:'Parecoxib',      min:0.5, max:0.5, unit:'mg', maxD:20,   note:'IV · off-label <18a · máx 20 mg'},
+    {name:'Metamizol',      min:10,  max:15,  unit:'mg', maxD:1000, note:'IV lento · máx 1g/dose · hipotensão'},
+    {name:'Diclofenac',     min:1,   max:1,   unit:'mg', maxD:75,   note:'IV/IM · >1 ano · máx 75 mg · 8/8h'},
+    {name:'Ibuprofeno',     min:5,   max:10,  unit:'mg', maxD:400,  note:'PO · >6 meses · máx 400 mg · 6/6h'},
+  ]},
+  {key:'antieméticos',label:'Antieméticos',icon:'🧡',grpClass:'g-antieméticos',dcClass:'dc-antieméticos',items:[
+    {name:'Ondansetron',    min:0.1,  max:0.1,  unit:'mg', maxD:4,    note:'IV · máx 4 mg · >1 mês'},
+    {name:'Dexametasona',   min:0.15, max:0.15, unit:'mg', maxD:8,    note:'IV · máx 8 mg · profilaxia PONV'},
+    {name:'Metoclopramida', min:0.15, max:0.15, unit:'mg', maxD:10,   note:'IV lento · máx 10 mg · risco EPS'},
+    {name:'Droperidol',     min:0.02, max:0.05, unit:'mg', maxD:1.25, note:'IV · máx 1.25 mg · monitorizar QTc'},
+  ]},
+  {key:'antibióticos',label:'Antibióticos',icon:'🩵',grpClass:'g-antibióticos',dcClass:'dc-antibióticos',items:[
+    {name:'Cefazolina',       min:25,  max:30,  unit:'mg', maxD:2000, note:'IV · profilaxia · máx 2g · 30 min antes'},
+    {name:'Clindamicina',     min:10,  max:10,  unit:'mg', maxD:600,  note:'IV lento · alérgicos penicilina · máx 600 mg'},
+    {name:'Gentamicina',      min:2.5, max:2.5, unit:'mg',            note:'IV · monitorização renal e auditiva'},
+    {name:'Amox-Clavulanato', min:25,  max:25,  unit:'mg', maxD:2000, note:'IV · máx 2g · espectro alargado'},
+    {name:'Cefoxitina',       min:20,  max:40,  unit:'mg', maxD:2000, note:'IV · cobertura anaeróbios · máx 2g'},
+  ]},
+  {key:'reversores',label:'Reversores',icon:'🔄',grpClass:'g-reversores',dcClass:'dc-reversores',items:[
+    {name:'Sugammadex — Moderada', min:2,    max:2,    unit:'mg', note:'Reversão moderada (T2) · rocurónio / vecurónio'},
+    {name:'Sugammadex — Profunda', min:4,    max:4,    unit:'mg', note:'Reversão profunda (PTC 1–2)'},
+    {name:'Sugammadex — RSI',      min:16,   max:16,   unit:'mg', note:'Reversão imediata pós-RSI · dose única'},
+    {name:'Flumazenil',            min:0.01, max:0.01, unit:'mg', maxD:0.2,  note:'IV lento · máx 0.2 mg/dose · repetir cada 1 min · máx 1 mg total'},
+    {name:'Naloxona',              min:0.01, max:0.01, unit:'mg', maxD:0.4,  note:'IV lento · máx 0.4 mg/dose · titular · repetir 2–3 min'},
+    {name:'Neostigmina',           min:0.04, max:0.07, unit:'mg', maxD:5,    note:'IV · máx 5 mg · SEMPRE com Atropina 0.02 mg/kg'},
+    {name:'Atropina (c/ Neostig.)',min:0.02, max:0.02, unit:'mg', maxD:0.5,  note:'IV · pré-neostigmina · mín 0.1 mg · máx 0.5 mg'},
+  ]},
+  {key:'vasopressores',label:'Vasopressores',icon:'❤️‍🔥',grpClass:'g-vasopressores',dcClass:'dc-vasopressores',items:[
+    {name:'Adrenalina IV/IO',   min:0.01, max:0.01, unit:'mg',         maxD:1,   note:'PCR / anafilaxia grave · máx 1 mg · cada 3–5 min'},
+    {name:'Adrenalina IM',      min:0.01, max:0.01, unit:'mg',         maxD:0.5, note:'Anafilaxia · vasto lateral · máx 0.5 mg · pode repetir'},
+    {name:'Adren. infusão',     min:0.05, max:1,    unit:'mcg/kg/min', calcResult:true, resultUnit:'mcg/min', note:'Iniciar 0.05 mcg/kg/min · titular por efeito'},
+    {name:'Noradrenalina inf.', min:0.05, max:1,    unit:'mcg/kg/min', calcResult:true, resultUnit:'mcg/min', note:'Choque vasoplégico · iniciar 0.05 · via central'},
+    {name:'Fenilefrina bólus',  min:1,    max:2,    unit:'mcg',        maxD:100, note:'IV · hipotensão intraop · máx 100 mcg · acção rápida'},
+    {name:'Fenilefrina inf.',   min:0.1,  max:0.5,  unit:'mcg/kg/min', calcResult:true, resultUnit:'mcg/min', note:'IV contínua · manutenção do tónus vascular'},
+    {name:'Efedrina',           min:0.1,  max:0.3,  unit:'mg',         maxD:10,  note:'IV · hipotensão anestesia geral/neuroaxial · máx 10 mg'},
+    {name:'Atropina',           min:0.02, max:0.02, unit:'mg',         maxD:0.5, note:'Bradicardia · mín 0.1 mg · máx 0.5 mg · pode repetir'},
+  ]},
+  {key:'fluidos',label:'Fluidos & Hemoderivados',icon:'💧',grpClass:'g-fluidos',dcClass:'dc-fluidos',items:[
+    {name:'SF 0.9% bólus',       min:10, max:20, unit:'mL', note:'IV/IO · administrar em 5–10 min · avaliar resposta'},
+    {name:'Lactato de Ringer',   min:10, max:20, unit:'mL', note:'IV · preferir em trauma e cirurgia major'},
+    {name:'Albumina 4–5%',       min:10, max:20, unit:'mL', note:'IV · hipoalbuminemia · choque refratário'},
+    {name:'Glóbulos Rubros',     min:10, max:15, unit:'mL', note:'IV · ↑Hb ≈1 g/dL por 3 mL/kg · irradiados <12a'},
+    {name:'G10% (hipoglicemia)', min:2,  max:5,  unit:'mL', note:'IV lento = 0.2–0.5 g/kg glicose · monitorizar glicemia'},
+  ]},
+  {key:'anesloc',label:'Anestésicos Locais',icon:'🟣',grpClass:'g-anesloc',dcClass:'dc-anesloc',items:[
+    {name:'Ropivacaína — Epidural',       min:0.5, max:1,   unit:'mg',                  note:'0.2–0.5% · bólus · ajustar por dermátomo'},
+    {name:'Ropivacaína — Caudal',         min:1,   max:2,   unit:'mg', maxD:40, toMl:2, note:'0.2% (2 mg/mL) · 1–2 mg/kg · volume máx 20 mL'},
+    {name:'Ropivacaína — Perineural',     min:0.5, max:3,   unit:'mg',                  note:'0.2–0.5% · dose única · máx absoluto 3 mg/kg'},
+    {name:'Lidocaína — IV (TIVA)',        min:1,   max:1.5, unit:'mg',                  note:'Bólus IV · infusão manutenção: 1–2 mg/kg/h'},
+    {name:'Lidocaína — Perineural',       min:3,   max:5,   unit:'mg',                  note:'Sem adren.: máx 5 mg/kg · c/ adren.: máx 7 mg/kg'},
+    {name:'Bupivacaína — Intratecal',     min:0.2, max:0.4, unit:'mg', maxD:10,         note:'0.5% hiperbárica · máx 10 mg · onset lento · duração longa'},
+    {name:'Levobupivacaína — Intratecal', min:0.2, max:0.4, unit:'mg', maxD:10,         note:'0.5% · máx 10 mg · perfil cardiotóxico mais seguro que bupi'},
+  ]},
+];
+
+/* ── VITALS ── */
+function getVitals(a,p){
+  var fc,fr,pas1,pas2,pad1,pad2;
+  if(a<1/12)    {fc='120–160';fr='30–60';pas1=60; pas2=80; pad1=30;pad2=50;}
+  else if(a<1)  {fc='100–160';fr='30–60';pas1=70; pas2=100;pad1=50;pad2=65;}
+  else if(a<3)  {fc='90–150'; fr='24–40';pas1=80; pas2=110;pad1=50;pad2=80;}
+  else if(a<6)  {fc='80–140'; fr='22–34';pas1=85; pas2=110;pad1=55;pad2=80;}
+  else if(a<12) {fc='70–120'; fr='18–30';pas1=90; pas2=120;pad1=60;pad2=80;}
+  else           {fc='60–100'; fr='12–20';pas1=100;pas2=130;pad1=60;pad2=85;}
+  return{fc,fr,pas1,pas2,pad1,pad2,pasMin:Math.round(70+2*a),vc6:Math.round(6*p),vc8:Math.round(8*p)};
+}
+
+/* ── AIRWAY ── */
+function getAirway(a,p){
+  var totSC,totCC,prof;
+  if(a<0.5)    {totSC=3.0;totCC=3.0;prof=9;}
+  else if(a<1) {totSC=3.5;totCC=3.0;prof=10;}
+  else{totSC=Math.round(((a/4)+4)*2)/2;totCC=Math.round(((a/4)+3.5)*2)/2;prof=Math.round((a/2)+12);}
+  var lam;
+  if(a<0.5)lam='Miller 0';else if(a<1)lam='Miller 0–1';else if(a<2)lam='Miller 1';
+  else if(a<5)lam='Miller 1–2 / Mac 2';else if(a<8)lam='Macintosh 2';
+  else if(a<12)lam='Macintosh 2–3';else lam='Macintosh 3';
+  var lmaT=[{l:'<5 kg',s:'1',ok:p<5},{l:'5–10 kg',s:'1.5',ok:p>=5&&p<10},
+    {l:'10–20 kg',s:'2',ok:p>=10&&p<20},{l:'20–30 kg',s:'2.5',ok:p>=20&&p<30},
+    {l:'30–50 kg',s:'3',ok:p>=30&&p<50},{l:'>50 kg',s:'4',ok:p>=50}];
+  var mf;
+  if(a<1/12)mf='0';else if(a<1)mf='1';else if(a<3)mf='2';
+  else if(a<8)mf='3';else if(a<12)mf='4';else mf='4–5';
+  return{totSC,totCC,prof,lam,lmaT,mf,naso:Math.round(a<1?14:(a/2)+14)};
+}
+
+/* ── EMERGENCY ── */
+function getEmerg(p,a){
+  var vol=Math.round((a<1?80:70)*p);
+  var man=p<=10?Math.round(4*p):p<=20?Math.round(40+2*(p-10)):Math.round(60+(p-20));
+  var f=function(v){return fmt(v*p);};
+  return{vol,man,
+    pcr:[
+      {n:'Adrenalina',           d:f(0.01), u:'mg',  r:'0.01 mg/kg IV/IO',      nt:'Cada 3–5 min · máx 1 mg por dose'},
+      {n:'Amiodarona FV/TVsP',   d:f(5),    u:'mg',  r:'5 mg/kg IV/IO',         nt:'Máx 300 mg · 2ª dose: 2.5 mg/kg'},
+      {n:'Bicarbonato 8.4%',     d:f(1),    u:'mEq', r:'1 mEq/kg IV/IO',        nt:'Após 10 min RCP · diluir 1:1 em <5 kg'},
+      {n:'Cálcio gluconato 10%', d:f(0.5),  u:'mL',  r:'0.5 mL/kg IV lento',    nt:'Hipocalcemia · hipercalemia · hiperMg'},
+    ],
+    defib:[
+      {n:'Desfibrilhação FV/TVsP',d:fmt(4*p),   u:'J',r:'4 J/kg bifásico',      nt:'Repetir mesma dose; máx 360 J'},
+      {n:'Cardioversão TSV',       d:fmt(0.5*p), u:'J',r:'0.5–1 J/kg sincron.',  nt:'Aumentar se ineficaz'},
+      {n:'Cardioversão FA/Flutter',d:fmt(1*p),   u:'J',r:'1–2 J/kg sincron.',    nt:'Sempre sincronizado'},
+    ],
+    conv:[
+      {n:'Midazolam IV',  d:fmt(0.15*p),             u:'mg',r:'0.1–0.2 mg/kg IV',      nt:'Máx 10 mg · 1ª linha se acesso IV'},
+      {n:'Midazolam IN',  d:fmt(0.4*p),              u:'mg',r:'0.3–0.5 mg/kg IN',      nt:'Sem acesso IV · atomizador nasal'},
+      {n:'Diazepam IV',   d:fmt(0.3*p),              u:'mg',r:'0.2–0.5 mg/kg IV',      nt:'Máx 10 mg · lento · risco apneia'},
+      {n:'Fenobarbital',  d:fmt(15*p)+'–'+fmt(20*p), u:'mg',r:'15–20 mg/kg IV 20 min', nt:'2ª linha · máx 1g'},
+      {n:'Levetiracetam', d:fmt(20*p)+'–'+fmt(60*p), u:'mg',r:'20–60 mg/kg IV 30 min', nt:'Máx 3g · boa tolerância'},
+    ],
+    anaf:[
+      {n:'Adrenalina IM',            d:fmt(Math.min(0.5,0.01*p)),   u:'mg',r:'0.01 mg/kg IM vasto lat.',   nt:'1ª linha · máx 0.5 mg · repetir 5–15 min'},
+      {n:'Adrenalina IV (refratária)',d:fmt(Math.min(0.1,0.001*p)),  u:'mg',r:'0.001–0.01 mg/kg IV lento',  nt:'Se sem resposta IM · titular · diluir 1:10 000'},
+      {n:'SF 0.9% bólus (choque)',   d:fmt(20*p),                    u:'mL',r:'20 mL/kg IV rápido',          nt:'Repetir se necessário · avaliar resposta'},
+      {n:'Hidrocortisona',            d:fmt(4*p),                     u:'mg',r:'4 mg/kg IV',                  nt:'Máx 200 mg · efeito tardio 4–6h'},
+      {n:'Clemastina',                d:fmt(Math.min(2,0.03*p)),      u:'mg',r:'0.025–0.05 mg/kg IV lento',   nt:'Máx 2 mg · anti-H1 · administrar em 2–3 min'},
+      {n:'Clorofeniramina',           d:fmt(Math.min(10,0.1*p)),      u:'mg',r:'0.1 mg/kg IV lento',          nt:'Máx 10 mg · alternativa à clemastina'},
+    ],
+    hipo:[
+      {n:'G10% IV',    d:fmt(5*p),       u:'mL',r:'5 mL/kg = 0.5 g/kg',   nt:'IV em 5–10 min · monitorizar glicemia'},
+      {n:'G30% IV',    d:fmt(1.7*p),     u:'mL',r:'1.7 mL/kg = 0.5 g/kg', nt:'Diluir sempre · via central preferida'},
+      {n:'Glucagon IM',d:p<25?'0.5':'1', u:'mg', r:p<25?'<25 kg: 0.5 mg':'≥25 kg: 1 mg', nt:'Se sem acesso IV'},
+    ],
+    brad:[
+      {n:'Atropina',       d:fmt(Math.max(0.1,Math.min(0.5,0.02*p))),u:'mg',         r:'0.02 mg/kg · mín 0.1 · máx 0.5',nt:'Pode repetir · excluir hipóxia primeiro'},
+      {n:'Adren. infusão', d:'0.05–1',                                u:'mcg/kg/min', r:'Iniciar 0.05, titular',          nt:'Preferir via central · monitorizar ECG'},
+    ],
+  };
+}
+
+/* ── HELPERS ── */
+function fmt(v){
+  if(v===null||v===undefined||isNaN(v))return'—';
+  if(v>=100)return Math.round(v).toString();
+  if(v>=10)return parseFloat(v.toFixed(1)).toString();
+  return parseFloat(v.toFixed(2)).toString();
+}
+function ageLabel(a){
+  if(a<1/12)return Math.round(a*30)+' dias';
+  if(a<1)return Math.round(a*12)+' meses';
+  return a+' anos';
+}
+
+/* ── RENDER FÁRMACOS ── */
+function renderFarmacos(p){
+  var h='';
+  DRUGS.forEach(function(g){
+    h+='<div class="drug-group">'+
+       '<div class="grp-header '+g.grpClass+'" onclick="toggleGrp(this)">'+
+       g.icon+' '+g.label+'<span class="chev">▲</span></div>'+
+       '<div class="grp-body"><div class="drug-grid">';
+    g.items.forEach(function(d){
+      var ds,unitDisplay,rs,cap=false;
+      if(d.calcResult){
+        var rMin=d.min*p,rMax=d.max*p;
+        ds=fmt(rMin)+'–'+fmt(rMax);
+        unitDisplay=d.resultUnit;
+        rs=d.min+'–'+d.max+' '+d.unit;
+      } else {
+        var mn=d.min*p,mx=d.max*p;
+        if(d.maxD){mn=Math.min(mn,d.maxD);mx=Math.min(mx,d.maxD);}
+        cap=!!(d.maxD&&(d.min*p>d.maxD||d.max*p>d.maxD));
+        if(d.toMl){
+          var mnMl=mn/d.toMl,mxMl=mx/d.toMl;
+          ds=mnMl===mxMl?fmt(mnMl):fmt(mnMl)+'–'+fmt(mxMl);
+          unitDisplay='mL';
+          rs=d.min+'–'+d.max+' mg/kg · 0.2%';
+        } else {
+          ds=mn===mx?fmt(mn):fmt(mn)+'–'+fmt(mx);
+          unitDisplay=d.unit;
+          rs=d.min===d.max?d.min+' '+d.unit+'/kg':d.min+'–'+d.max+' '+d.unit+'/kg';
+        }
+      }
+      h+='<div class="drug-row">'+
+         '<div style="flex:1;padding-right:8px">'+
+         '<div class="drug-name">'+d.name+'</div>'+
+         '<div class="drug-note">'+d.note+
+         (cap?'<br><span style="color:#c05621;font-weight:700">⚠ dose máxima atingida</span>':'')+
+         '</div></div>'+
+         '<div class="drug-right">'+
+         '<div class="drug-dose '+g.dcClass+'">'+ds+'</div>'+
+         '<div class="drug-unit">'+unitDisplay+'</div>'+
+         '<div class="drug-per-kg">'+rs+'</div>'+
+         '</div></div>';
+    });
+    h+='</div></div></div>';
+  });
+  document.getElementById('farmacos-out').innerHTML=h;
+}
+
+/* ── RENDER VITAIS ── */
+function renderVitais(a,p){
+  var v=getVitals(a,p);
+  document.getElementById('vitais-out').innerHTML=
+    '<div class="sec-label">Valores normais · '+ageLabel(a)+' · '+p+' kg</div>'+
+    '<div class="vitals-grid">'+
+    '<div class="v-card"><div class="v-header vh-fc">🫀 Frequência Cardíaca</div>'+
+      '<div class="v-row"><div class="v-lbl">FC Normal</div><div class="v-val">'+v.fc+' <span class="vu">bpm</span></div></div>'+
+    '</div>'+
+    '<div class="v-card"><div class="v-header vh-resp">🫁 Parâmetros Respiratórios</div>'+
+      '<div class="v-row"><div class="v-lbl">Frequência Respiratória</div><div class="v-val">'+v.fr+' <span class="vu">rpm</span></div></div>'+
+      '<div class="v-row"><div class="v-lbl">Volume Corrente<small>6–8 mL/kg · '+p+' kg</small></div><div class="v-val">'+v.vc6+'–'+v.vc8+' <span class="vu">mL</span></div></div>'+
+    '</div>'+
+    '<div class="v-card"><div class="v-header vh-pa">🩸 Pressão Arterial</div>'+
+      '<div class="v-row"><div class="v-lbl">PAS normal</div><div class="v-val">'+v.pas1+'–'+v.pas2+' <span class="vu">mmHg</span></div></div>'+
+      '<div class="v-row"><div class="v-lbl">PAD normal</div><div class="v-val">'+v.pad1+'–'+v.pad2+' <span class="vu">mmHg</span></div></div>'+
+      '<div class="v-row"><div class="v-lbl">PAS mínima<small>70 + (2 × idade)</small></div><div class="v-val danger">'+v.pasMin+' <span class="vu">mmHg</span></div></div>'+
+    '</div></div>';
+}
+
+/* ── RENDER VIA AÉREA ── */
+function renderViaArea(a,p){
+  var aw=getAirway(a,p);
+  var lmaR=aw.lmaT.map(function(r){
+    return '<tr class="'+(r.ok?'active-row':'')+'"><td>'+r.l+'</td><td>'+r.s+'</td><td>'+(r.ok?'✅':'')+'</td></tr>';
+  }).join('');
+  document.getElementById('viaarea-out').innerHTML=
+    '<div class="sec-label">Via Aérea · '+ageLabel(a)+' · '+p+' kg</div>'+
+    '<div class="airway-grid">'+
+    '<div>'+
+    '<div class="a-card"><div class="a-header ah-tot">🔵 Tubo Orotraqueal (TOT)</div>'+
+      '<div class="a-row"><div class="a-lbl">Sem cuff<small>(idade/4)+4</small></div><div class="a-val">'+aw.totSC+' <span class="av-u">mm</span></div></div>'+
+      '<div class="a-row"><div class="a-lbl">Com cuff<small>(idade/4)+3.5</small></div><div class="a-val">'+aw.totCC+' <span class="av-u">mm</span></div></div>'+
+      '<div class="a-row"><div class="a-lbl">Profundidade<small>(idade/2)+12</small></div><div class="a-val">'+aw.prof+' <span class="av-u">cm</span></div></div>'+
+    '</div>'+
+    '<div class="a-card"><div class="a-header ah-laring">🟣 Laringoscópio</div>'+
+      '<div class="a-row"><div class="a-lbl">Lâmina recomendada</div><div class="a-val" style="font-size:14px">'+aw.lam+'</div></div>'+
+    '</div>'+
+    '<div class="a-card"><div class="a-header ah-mask">🟠 Máscara Facial</div>'+
+      '<div class="a-row"><div class="a-lbl">Tamanho</div><div class="a-val">'+aw.mf+'</div></div>'+
+    '</div>'+
+    '<div class="a-card"><div class="a-header ah-naso">🔴 Tubo Nasofaríngeo</div>'+
+      '<div class="a-row"><div class="a-lbl">Comprimento<small>narina–trago</small></div><div class="a-val">'+aw.naso+' <span class="av-u">mm</span></div></div>'+
+    '</div>'+
+    '</div>'+
+    '<div>'+
+    '<div class="a-card"><div class="a-header ah-lma">🟢 Máscara Laríngea (LMA)</div>'+
+      '<div class="a-row" style="display:block;padding:10px 14px">'+
+      '<table class="lma-table"><tr><th>Peso</th><th>Tamanho</th><th>Doente</th></tr>'+lmaR+'</table>'+
+      '</div>'+
+    '</div>'+
+    '<div class="warn-box">⚠️ Fórmulas são estimativas. Ter sempre disponível material de tamanho adjacente. Decisão final sempre clínica.</div>'+
+    '</div></div>';
+}
+
+/* ── RENDER EMERGÊNCIA ── */
+function eCard(hClass,icon,title,rows,info){
+  var rowsH=rows.map(function(r){
+    return '<div class="e-row"><div class="e-lbl">'+r.n+'<small>'+r.nt+'</small></div>'+
+           '<div class="e-val"><div class="e-dose">'+r.d+'</div><div class="e-unit">'+r.u+'</div><div class="e-per">'+r.r+'</div></div></div>';
+  }).join('');
+  return '<div class="e-card"><div class="e-header '+hClass+'">'+icon+' '+title+'</div>'+rowsH+'<div class="e-info">'+info+'</div></div>';
+}
+function renderEmergencia(p,a){
+  var e=getEmerg(p,a);
+  document.getElementById('emerg-out').innerHTML=
+    '<div class="emerg-banner">'+
+      '<div><h3>🚨 Emergência Pediátrica</h3><p>Doses calculadas para o doente actual</p></div>'+
+      '<div class="emerg-stats">'+
+        '<div class="emerg-stat"><div class="es-val">'+fmt(p)+' kg</div><div class="es-lbl">Peso</div></div>'+
+        '<div class="emerg-stat"><div class="es-val">'+e.vol+' mL</div><div class="es-lbl">Volemia estimada</div></div>'+
+        '<div class="emerg-stat"><div class="es-val">'+e.man+' mL/h</div><div class="es-lbl">Manutenção (4-2-1)</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="emerg-grid">'+
+    eCard('eh-pcr',  '💔','PCR – Ressuscitação',         e.pcr,  '📋 100–120 comp/min · profundidade 1/3 tórax · rácio 15:2 · verificar ritmo cada 2 min')+
+    eCard('eh-defib','⚡','Desfibrilhação / Cardioversão', e.defib,'📋 Sincronizar SEMPRE na cardioversão · confirmar modo no desfibrilhador')+
+    eCard('eh-conv', '🧠','Estado de Mal Epilético',       e.conv, '📋 0–5 min: O₂ · 5 min: BZD · 15–20 min: 2ª linha · >30 min: anestesia geral')+
+    eCard('eh-anaf', '🌡️','Anafilaxia',                   e.anaf, '📋 Adrenalina IM 1ª linha · se refratária: adrenalina IV diluída · O₂ alto débito')+
+    eCard('eh-hipo', '🍬','Hipoglicemia',                  e.hipo, '📋 Objectivo: glicemia >60 mg/dL · monitorizar 15/15 min · manutenção G10%')+
+    eCard('eh-brad', '💓','Bradicardia c/ Compromisso',    e.brad, '📋 Excluir hipóxia (causa mais comum) · se sem resposta: adrenalina IV/IO')+
+    '</div>';
+}
+
+/* ── MAIN CALC ── */
+function calcular(){
+  var p=parseFloat(document.getElementById('inp-peso').value);
+  if(!p||p<=0){alert('Por favor, introduz o peso do doente.');return;}
+  var a=getIdadeAnos();
+  var h=parseFloat(document.getElementById('inp-altura').value)||0;
+  var info='Peso: <span>'+p+' kg</span>';
+  var chips='';
+  if(h>0){
+    var imc=(p/Math.pow(h/100,2)).toFixed(1);
+    var pib=(22*Math.pow(h/100,2)).toFixed(1);
+    info+=' &nbsp;|&nbsp; Altura: <span>'+h+' cm</span>';
+    chips+='<span class="chip">IMC '+imc+' kg/m²</span>';
+    chips+='<span class="chip">Peso ideal '+pib+' kg</span>';
+  }
+  if(a>0) chips+='<span class="chip">'+ageLabel(a)+'</span>';
+  document.getElementById('winfo').innerHTML=info;
+  document.getElementById('chips').innerHTML=chips;
+  renderFarmacos(p);renderVitais(a,p);renderViaArea(a,p);renderEmergencia(p,a);
+}
+
+/* ── UI ── */
+function switchTab(n,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-pane').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+}
+function toggleGrp(hdr){
+  var b=hdr.nextElementSibling,open=!hdr.classList.contains('collapsed');
+  hdr.classList.toggle('collapsed',open);
+  b.style.display=open?'none':'';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Enter')calcular();});
+</script>
+</body>
+</html>
