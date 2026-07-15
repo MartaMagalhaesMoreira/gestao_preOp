@@ -1,1027 +1,845 @@
-import { useState, useMemo, useRef, useCallback } from "react";
-import * as mammoth from "mammoth";
-import * as XLSX from "xlsx";
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta Pré-Anestésica | Saúde Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#04091a;font-family:'DM Sans',sans-serif;color:#b8cce8;min-height:100vh}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#080f22}::-webkit-scrollbar-thumb{background:#152035;border-radius:3px}
+  input,select,textarea{font-family:'DM Sans',sans-serif}
+  input::placeholder,textarea::placeholder{color:#3a5878}
+  select option{background:#0c1630}
+  input[type=checkbox]{accent-color:#00aaff;width:15px;height:15px;cursor:pointer}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .import-drop{border:2px dashed #152035;border-radius:12px;transition:all .2s}
+  .import-drop.over{border-color:#00aaff;background:rgba(0,170,255,.06)}
+  @media print{
+    .no-print{display:none!important}
+    .print-only{display:block!important}
+    body{background:white!important;color:#1a1a1a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{size:A4 portrait;margin:12mm 15mm}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useRef, useCallback } = React;
 
-/* ─── Design tokens ─────────────────────────────────────────── */
+/* ── Design tokens ── */
 const C = {
-  bg: "#04091a", surface: "#080f22", card: "#0c1630",
-  border: "#152035",
-  accent: "#00aaff",
-  text: "#b8cce8", textBright: "#ddeeff", textDim: "#3a5878",
-  green: "#00cc88", yellow: "#f5b800", orange: "#ff7722", red: "#ff3355",
-  purple: "#aa66ff",
-  mono: "'JetBrains Mono', monospace",
-  sans: "'DM Sans', sans-serif",
-  head: "'Syne', sans-serif",
+  bg:"#04091a",surface:"#080f22",card:"#0c1630",border:"#152035",
+  accent:"#00aaff",text:"#b8cce8",textBright:"#ddeeff",textDim:"#3a5878",
+  green:"#00cc88",yellow:"#f5b800",orange:"#ff7722",red:"#ff3355",purple:"#aa66ff",
+  mono:"'JetBrains Mono',monospace",sans:"'DM Sans',sans-serif",head:"'Syne',sans-serif",
 };
 
-const globalCss = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: ${C.bg}; font-family: ${C.sans}; color: ${C.text}; }
-  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: ${C.surface}; }
-  ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 3px; }
-  input, select, textarea { font-family: ${C.sans}; }
-  input::placeholder, textarea::placeholder { color: ${C.textDim}; }
-  select option { background: ${C.card}; }
-  input[type=checkbox] { accent-color: ${C.accent}; width:15px; height:15px; cursor:pointer; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  @keyframes slideDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .import-drop { border: 2px dashed ${C.border}; border-radius: 12px; transition: all .2s; }
-  .import-drop.over { border-color: ${C.accent}; background: ${C.accent}10; }
-  @media print {
-    .no-print { display: none !important; }
-    .print-only { display: block !important; }
-    body { background: white !important; color: #1a1a1a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @page { size: A4 portrait; margin: 12mm 15mm; }
-  }
-`;
-
-/* ─── Antecedentes system config ─────────────────────────────── */
+/* ── Antecedentes systems ── */
 const ANT_SYSTEMS = [
-  {
-    id: "cardiovascular", label: "Cardiovascular", icon: "🫀", color: "#ff3355",
-    items: [
-      { k: "hta", l: "Hipertensão arterial" },
-      { k: "cardiopatia_isq", l: "Cardiopatia isquémica" },
-      { k: "insuf_cardiaca", l: "Insuf. cardíaca" },
-      { k: "arritmia", l: "Arritmia cardíaca" },
-      { k: "valvulopatia", l: "Valvulopatia" },
-      { k: "dap", l: "Doença arterial periférica" },
-    ],
-    txtKey: "txt_cardiovascular",
-  },
-  {
-    id: "respiratorio", label: "Respiratório", icon: "🫁", color: "#00aaff",
-    items: [
-      { k: "dpoc", l: "DPOC" },
-      { k: "asma", l: "Asma brônquica" },
-      { k: "insuf_resp", l: "Insuf. respiratória crónica" },
-      { k: "apneia", l: "SAOS" },
-    ],
-    txtKey: "txt_respiratorio",
-  },
-  {
-    id: "neurologico", label: "Neurológico", icon: "🧠", color: "#aa66ff",
-    items: [
-      { k: "avc", l: "AVC" },
-      { k: "ait", l: "AIT" },
-      { k: "epilepsia", l: "Epilepsia" },
-      { k: "demencia", l: "Demência" },
-      { k: "parkinson", l: "Doença de Parkinson" },
-    ],
-    txtKey: "txt_neurologico",
-  },
-  {
-    id: "endocrino", label: "Endócrino / Metabólico", icon: "⚗️", color: "#f5b800",
-    items: [
-      { k: "dm_oral", l: "Diabetes (ADO)" },
-      { k: "dm_insulina", l: "Diabetes (insulina)" },
-      { k: "hipotiroidismo", l: "Hipotiroidismo" },
-      { k: "hipertiroidismo", l: "Hipertiroidismo" },
-    ],
-    txtKey: "txt_endocrino",
-  },
-  {
-    id: "renal", label: "Renal / Hepático", icon: "🫘", color: "#ff7722",
-    items: [
-      { k: "insuf_renal", l: "Insuf. renal crónica" },
-      { k: "dialise", l: "IRC em diálise" },
-      { k: "insuf_hepatica", l: "Insuf. hepática" },
-      { k: "cirrose", l: "Cirrose hepática" },
-    ],
-    txtKey: "txt_renal",
-  },
-  {
-    id: "hemato", label: "Hematológico / Oncológico", icon: "🩸", color: "#ff6688",
-    items: [
-      { k: "coagulopatia", l: "Coagulopatia" },
-      { k: "anticoagulacao", l: "Anticoagulação crónica" },
-      { k: "anemia_cronica", l: "Anemia crónica" },
-      { k: "neoplasia", l: "Neoplasia activa" },
-      { k: "quimio", l: "Quimio/Radioterapia" },
-    ],
-    txtKey: "txt_hemato",
-  },
+  { id:"cardiovascular", label:"Cardiovascular", icon:"🫀", color:"#ff3355",
+    items:[{k:"hta",l:"Hipertensão arterial"},{k:"cardiopatia_isq",l:"Cardiopatia isquémica"},
+           {k:"insuf_cardiaca",l:"Insuf. cardíaca"},{k:"arritmia",l:"Arritmia cardíaca"},
+           {k:"valvulopatia",l:"Valvulopatia"},{k:"dap",l:"Doença arterial periférica"}],
+    txtKey:"txt_cardiovascular"},
+  { id:"respiratorio", label:"Respiratório", icon:"🫁", color:"#00aaff",
+    items:[{k:"dpoc",l:"DPOC"},{k:"asma",l:"Asma brônquica"},
+           {k:"insuf_resp",l:"Insuf. respiratória crónica"},{k:"apneia",l:"SAOS"}],
+    txtKey:"txt_respiratorio"},
+  { id:"neurologico", label:"Neurológico", icon:"🧠", color:"#aa66ff",
+    items:[{k:"avc",l:"AVC"},{k:"ait",l:"AIT"},{k:"epilepsia",l:"Epilepsia"},
+           {k:"demencia",l:"Demência"},{k:"parkinson",l:"Doença de Parkinson"}],
+    txtKey:"txt_neurologico"},
+  { id:"endocrino", label:"Endócrino / Metabólico", icon:"⚗️", color:"#f5b800",
+    items:[{k:"dm_oral",l:"Diabetes (ADO)"},{k:"dm_insulina",l:"Diabetes (insulina)"},
+           {k:"hipotiroidismo",l:"Hipotiroidismo"},{k:"hipertiroidismo",l:"Hipertiroidismo"}],
+    txtKey:"txt_endocrino"},
+  { id:"renal", label:"Renal / Hepático", icon:"🫘", color:"#ff7722",
+    items:[{k:"insuf_renal",l:"Insuf. renal crónica"},{k:"dialise",l:"IRC em diálise"},
+           {k:"insuf_hepatica",l:"Insuf. hepática"},{k:"cirrose",l:"Cirrose hepática"}],
+    txtKey:"txt_renal"},
+  { id:"hemato", label:"Hematológico / Oncológico", icon:"🩸", color:"#ff6688",
+    items:[{k:"coagulopatia",l:"Coagulopatia"},{k:"anticoagulacao",l:"Anticoagulação crónica"},
+           {k:"anemia_cronica",l:"Anemia crónica"},{k:"neoplasia",l:"Neoplasia activa"},
+           {k:"quimio",l:"Quimio/Radioterapia"}],
+    txtKey:"txt_hemato"},
 ];
 
-/* ─── Label lookups ──────────────────────────────────────────── */
-const TECNICA_LABELS = {
-  AG: "Anestesia Geral", AG_IOT: "AG com IOT", AG_ML: "AG com Máscara Laríngea",
-  raqui: "Raquianestesia", epidural: "Epidural", plexo: "Bloqueio de Plexo",
-  local: "Anestesia Local", sedacao: "Sedação / MAC", outra: "Outra",
-};
-const RITMO_LABELS = {
-  sinusal: "Sinusal", fa: "Fibrilhação Auricular", flutter: "Flutter Auricular",
-  bav1: "BAV 1º grau", bav2: "BAV 2º grau", bav3: "BAV 3º grau",
-  bbce: "BBCE", bbcd: "BBCD", outro: "Outro",
-};
+const TECNICA_LABELS = {AG:"Anestesia Geral",AG_IOT:"AG com IOT",AG_ML:"AG com Máscara Laríngea",
+  raqui:"Raquianestesia",epidural:"Epidural",plexo:"Bloqueio de Plexo",
+  local:"Anestesia Local",sedacao:"Sedação/MAC",outra:"Outra"};
+const RITMO_LABELS = {sinusal:"Sinusal",fa:"Fibrilhação Auricular",flutter:"Flutter Auricular",
+  bav1:"BAV 1º grau",bav2:"BAV 2º grau",bav3:"BAV 3º grau",bbce:"BBCE",bbcd:"BBCD",outro:"Outro"};
 
-/* ─── Micro-components ───────────────────────────────────────── */
-const inputSt = {
-  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 7,
-  color: C.textBright, padding: "9px 12px", fontSize: 14, width: "100%",
-  outline: "none", transition: "border-color .2s",
-};
-const labelSt = {
-  color: C.textDim, fontSize: 10, fontFamily: C.head, fontWeight: 700,
-  textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 5,
-};
-const cardSt = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" };
-const sectionTitleSt = {
-  fontFamily: C.head, fontSize: 13, fontWeight: 700, color: C.accent,
-  textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 18,
-  paddingBottom: 10, borderBottom: `1px solid ${C.border}`,
-};
+/* ── Style constants ── */
+const inputSt = {background:C.surface,border:`1px solid ${C.border}`,borderRadius:7,color:C.textBright,
+  padding:"9px 12px",fontSize:14,width:"100%",outline:"none",transition:"border-color .2s"};
+const labelSt = {color:C.textDim,fontSize:10,fontFamily:C.head,fontWeight:700,
+  textTransform:"uppercase",letterSpacing:"0.1em",display:"block",marginBottom:5};
+const cardSt = {background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 22px"};
+const secTitSt = {fontFamily:C.head,fontSize:13,fontWeight:700,color:C.accent,
+  textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:18,
+  paddingBottom:10,borderBottom:`1px solid ${C.border}`};
 
-function Lbl({ children }) { return <label style={labelSt}>{children}</label>; }
-function Inp({ value, onChange, placeholder, type = "text", style = {} }) {
-  return (
-    <input type={type} value={value} onChange={e => onChange(e.target.value)}
-      placeholder={placeholder} style={{ ...inputSt, ...style }}
-      onFocus={e => e.target.style.borderColor = C.accent}
-      onBlur={e => e.target.style.borderColor = C.border} />
-  );
+/* ── Micro-components ── */
+function Lbl({children}){return <label style={labelSt}>{children}</label>;}
+function Inp({value,onChange,placeholder,type="text",style={}}){
+  return <input type={type} value={value} onChange={e=>onChange(e.target.value)}
+    placeholder={placeholder} style={{...inputSt,...style}}
+    onFocus={e=>e.target.style.borderColor=C.accent}
+    onBlur={e=>e.target.style.borderColor=C.border}/>;
 }
-function Sel({ value, onChange, options, placeholder = "Selecionar..." }) {
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)} style={inputSt}>
-      <option value="">{placeholder}</option>
-      {options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-    </select>
-  );
+function Sel({value,onChange,options,placeholder="Selecionar..."}){
+  return <select value={value} onChange={e=>onChange(e.target.value)} style={inputSt}>
+    <option value="">{placeholder}</option>
+    {options.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+  </select>;
 }
-function Txt({ value, onChange, rows = 3, placeholder }) {
-  return (
-    <textarea value={value} onChange={e => onChange(e.target.value)}
-      rows={rows} placeholder={placeholder}
-      style={{ ...inputSt, resize: "vertical", lineHeight: 1.6 }} />
-  );
+function Txt({value,onChange,rows=3,placeholder}){
+  return <textarea value={value} onChange={e=>onChange(e.target.value)} rows={rows}
+    placeholder={placeholder} style={{...inputSt,resize:"vertical",lineHeight:1.6}}/>;
 }
-function Field({ label, children, col = 1 }) {
-  return <div style={{ gridColumn: `span ${col}` }}><Lbl>{label}</Lbl>{children}</div>;
+function Field({label,children,col=1}){
+  return <div style={{gridColumn:`span ${col}`}}><Lbl>{label}</Lbl>{children}</div>;
 }
-function Grid({ cols = 2, gap = 16, children }) {
-  return <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap }}>{children}</div>;
+function Grid({cols=2,gap=16,children}){
+  return <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap}}>{children}</div>;
 }
-function Badge({ label, color }) {
-  return (
-    <span style={{
-      background: `${color}22`, color, border: `1px solid ${color}55`,
-      borderRadius: 20, padding: "2px 10px", fontSize: 11,
-      fontFamily: C.head, fontWeight: 700, letterSpacing: "0.05em",
-    }}>{label}</span>
-  );
+function Badge({label,color}){
+  return <span style={{background:`${color}22`,color,border:`1px solid ${color}55`,
+    borderRadius:20,padding:"2px 10px",fontSize:11,fontFamily:C.head,fontWeight:700,letterSpacing:"0.05em"}}>{label}</span>;
 }
-function Btn({ children, onClick, variant = "primary", small, disabled }) {
-  const bg = { primary: C.accent, danger: C.red, purple: C.purple, ghost: C.border }[variant] || C.accent;
-  const col = variant === "ghost" ? C.text : "#fff";
-  return (
-    <button onClick={onClick} disabled={disabled} style={{
-      background: disabled ? C.border : bg, color: disabled ? C.textDim : col,
-      border: "none", borderRadius: 7, cursor: disabled ? "not-allowed" : "pointer",
-      padding: small ? "5px 10px" : "8px 16px", fontSize: small ? 11 : 13,
-      fontFamily: C.head, fontWeight: 700, letterSpacing: "0.05em", transition: "opacity .2s",
-    }}
-      onMouseEnter={e => !disabled && (e.currentTarget.style.opacity = "0.8")}
-      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
-      {children}
-    </button>
-  );
+function Btn({children,onClick,variant="primary",small,disabled}){
+  const bg={primary:C.accent,danger:C.red,purple:C.purple,ghost:C.border}[variant]||C.accent;
+  const col=variant==="ghost"?C.text:"#fff";
+  return <button onClick={onClick} disabled={disabled} style={{background:disabled?C.border:bg,color:disabled?C.textDim:col,
+    border:"none",borderRadius:7,cursor:disabled?"not-allowed":"pointer",
+    padding:small?"5px 10px":"8px 16px",fontSize:small?11:13,
+    fontFamily:C.head,fontWeight:700,letterSpacing:"0.05em",transition:"opacity .2s"}}
+    onMouseEnter={e=>!disabled&&(e.currentTarget.style.opacity="0.8")}
+    onMouseLeave={e=>(e.currentTarget.style.opacity="1")}>{children}</button>;
 }
-function Checkbox({ label, checked, onChange }) {
-  return (
-    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-      fontSize: 13, color: checked ? C.textBright : C.text, userSelect: "none" }}>
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
-      {label}
-    </label>
-  );
+function Checkbox({label,checked,onChange}){
+  return <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",
+    fontSize:13,color:checked?C.textBright:C.text,userSelect:"none"}}>
+    <input type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)}/>{label}
+  </label>;
 }
-function RiskCard({ title, score, pct, level, color, factors = [], desc }) {
-  return (
-    <div style={{ ...cardSt, borderLeft: `3px solid ${color}` }}>
-      <div style={{ fontFamily: C.head, fontSize: 11, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{title}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-        {score !== undefined && <span style={{ fontFamily: C.mono, fontSize: 28, fontWeight: 700, color }}>{score}</span>}
-        <div>
-          {pct && <div style={{ fontFamily: C.mono, fontSize: 13, color }}>{pct}</div>}
-          <div style={{ fontFamily: C.head, fontSize: 12, color, fontWeight: 700 }}>{level}</div>
-        </div>
-      </div>
-      {desc && <div style={{ fontSize: 12, color: C.text, fontStyle: "italic", marginBottom: factors.length ? 10 : 0 }}>{desc}</div>}
-      {factors.length > 0 && (
-        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10, marginTop: 6 }}>
-          <div style={{ fontSize: 10, color: C.textDim, fontFamily: C.head, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Fatores presentes</div>
-          {factors.map((f, i) => (
-            <div key={i} style={{ fontSize: 12, color: C.text, display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
-              {f}
-            </div>
-          ))}
-        </div>
-      )}
+function RiskCard({title,score,pct,level,color,factors=[],desc}){
+  return <div style={{...cardSt,borderLeft:`3px solid ${color}`}}>
+    <div style={{fontFamily:C.head,fontSize:11,color:C.textDim,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>{title}</div>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+      {score!==undefined&&<span style={{fontFamily:C.mono,fontSize:28,fontWeight:700,color}}>{score}</span>}
+      <div>{pct&&<div style={{fontFamily:C.mono,fontSize:13,color}}>{pct}</div>}
+        <div style={{fontFamily:C.head,fontSize:12,color,fontWeight:700}}>{level}</div></div>
     </div>
-  );
+    {desc&&<div style={{fontSize:12,color:C.text,fontStyle:"italic",marginBottom:factors.length?10:0}}>{desc}</div>}
+    {factors.length>0&&<div style={{borderTop:`1px solid ${C.border}`,paddingTop:10,marginTop:6}}>
+      <div style={{fontSize:10,color:C.textDim,fontFamily:C.head,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>Fatores presentes</div>
+      {factors.map((f,i)=><div key={i} style={{fontSize:12,color:C.text,display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+        <span style={{width:5,height:5,borderRadius:"50%",background:color,flexShrink:0}}/>{f}</div>)}
+    </div>}
+  </div>;
 }
-
-/* ─── AntSystem card ─────────────────────────────────────────── */
-function AntSystem({ sys, ant, setAnt }) {
-  const count = sys.items.filter(it => ant[it.k]).length;
-  const hasAny = count > 0;
-  return (
-    <div style={{ ...cardSt, borderLeft: `3px solid ${hasAny ? sys.color : C.border}`, transition: "border-color .3s" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
-        <span style={{ fontSize: 20 }}>{sys.icon}</span>
-        <span style={{ fontFamily: C.head, fontSize: 13, fontWeight: 700, color: hasAny ? sys.color : C.textDim, textTransform: "uppercase", letterSpacing: "0.1em", flex: 1, transition: "color .2s" }}>
-          {sys.label}
-        </span>
-        {hasAny && <Badge label={`${count} activo${count > 1 ? "s" : ""}`} color={sys.color} />}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(195px, 1fr))", gap: "8px 20px", marginBottom: 14 }}>
-        {sys.items.map(it => (
-          <Checkbox key={it.k} label={it.l} checked={ant[it.k]} onChange={v => setAnt(p => ({ ...p, [it.k]: v }))} />
-        ))}
-      </div>
-      <div>
-        <Lbl>Outros / Especificar</Lbl>
-        <Txt value={ant[sys.txtKey]} onChange={v => setAnt(p => ({ ...p, [sys.txtKey]: v }))}
-          rows={2} placeholder={`Notas adicionais sobre ${sys.label.toLowerCase()}...`} />
-      </div>
+function AntSystem({sys,ant,setAnt}){
+  const count=sys.items.filter(it=>ant[it.k]).length;
+  const hasAny=count>0;
+  return <div style={{...cardSt,borderLeft:`3px solid ${hasAny?sys.color:C.border}`,transition:"border-color .3s"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
+      <span style={{fontSize:20}}>{sys.icon}</span>
+      <span style={{fontFamily:C.head,fontSize:13,fontWeight:700,color:hasAny?sys.color:C.textDim,
+        textTransform:"uppercase",letterSpacing:"0.1em",flex:1,transition:"color .2s"}}>{sys.label}</span>
+      {hasAny&&<Badge label={`${count} activo${count>1?"s":""}`} color={sys.color}/>}
     </div>
-  );
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))",gap:"8px 20px",marginBottom:14}}>
+      {sys.items.map(it=><Checkbox key={it.k} label={it.l} checked={ant[it.k]} onChange={v=>setAnt(p=>({...p,[it.k]:v}))}/>)}
+    </div>
+    <div><Lbl>Outros / Especificar</Lbl>
+      <Txt value={ant[sys.txtKey]} onChange={v=>setAnt(p=>({...p,[sys.txtKey]:v}))}
+        rows={2} placeholder={`Notas adicionais sobre ${sys.label.toLowerCase()}...`}/>
+    </div>
+  </div>;
 }
 
-/* ─── Lab helpers ────────────────────────────────────────────── */
-function labColor(val, lo, hi) {
-  const v = parseFloat(val);
-  if (!val || isNaN(v)) return C.text;
-  if (v < lo) return C.yellow;
-  if (v > hi) return C.red;
-  return C.green;
-}
-const labFields = (sexo) => [
-  { key: "hemoglobina", label: "Hemoglobina", unit: "g/dL", lo: sexo === "M" ? 13.0 : 12.0, hi: sexo === "M" ? 17.0 : 16.0, ref: sexo === "M" ? "13–17" : "12–16" },
-  { key: "plaquetas", label: "Plaquetas", unit: "×10³/µL", lo: 150, hi: 400, ref: "150–400" },
-  { key: "inr", label: "INR", unit: "", lo: 0.8, hi: 1.2, ref: "0.8–1.2" },
-  { key: "aptt", label: "aPTT", unit: "seg", lo: 25, hi: 38, ref: "25–38" },
-  { key: "tp", label: "TP", unit: "seg", lo: 11, hi: 14, ref: "11–14" },
-  { key: "creatinina", label: "Creatinina", unit: "mg/dL", lo: 0.5, hi: sexo === "M" ? 1.2 : 1.0, ref: sexo === "M" ? "0.7–1.2" : "0.5–1.0" },
-  { key: "sodio", label: "Sódio", unit: "mEq/L", lo: 136, hi: 145, ref: "136–145" },
-  { key: "potassio", label: "Potássio", unit: "mEq/L", lo: 3.5, hi: 5.0, ref: "3.5–5.0" },
-  { key: "ureia", label: "Ureia", unit: "mg/dL", lo: 10, hi: 50, ref: "10–50" },
-  { key: "tsh", label: "TSH", unit: "mUI/L", lo: 0.4, hi: 4.0, ref: "0.4–4.0" },
-  { key: "t4livre", label: "T4 Livre", unit: "ng/dL", lo: 0.8, hi: 1.8, ref: "0.8–1.8" },
+/* ── Lab helpers ── */
+function labColor(val,lo,hi){const v=parseFloat(val);if(!val||isNaN(v))return C.text;if(v<lo)return C.yellow;if(v>hi)return C.red;return C.green;}
+const labFields=(sexo)=>[
+  {key:"hemoglobina",label:"Hemoglobina",unit:"g/dL",lo:sexo==="M"?13:12,hi:sexo==="M"?17:16,ref:sexo==="M"?"13–17":"12–16"},
+  {key:"plaquetas",label:"Plaquetas",unit:"×10³/µL",lo:150,hi:400,ref:"150–400"},
+  {key:"inr",label:"INR",unit:"",lo:0.8,hi:1.2,ref:"0.8–1.2"},
+  {key:"aptt",label:"aPTT",unit:"seg",lo:25,hi:38,ref:"25–38"},
+  {key:"tp",label:"TP",unit:"seg",lo:11,hi:14,ref:"11–14"},
+  {key:"creatinina",label:"Creatinina",unit:"mg/dL",lo:0.5,hi:sexo==="M"?1.2:1.0,ref:sexo==="M"?"0.7–1.2":"0.5–1.0"},
+  {key:"sodio",label:"Sódio",unit:"mEq/L",lo:136,hi:145,ref:"136–145"},
+  {key:"potassio",label:"Potássio",unit:"mEq/L",lo:3.5,hi:5.0,ref:"3.5–5.0"},
+  {key:"ureia",label:"Ureia",unit:"mg/dL",lo:10,hi:50,ref:"10–50"},
+  {key:"tsh",label:"TSH",unit:"mUI/L",lo:0.4,hi:4.0,ref:"0.4–4.0"},
+  {key:"t4livre",label:"T4 Livre",unit:"ng/dL",lo:0.8,hi:1.8,ref:"0.8–1.8"},
 ];
 
-/* ─── Extraction prompt (updated ant schema) ─────────────────── */
-const EXTRACTION_PROMPT = `És um assistente médico especializado em anestesiologia. Analisa o documento clínico e extrai TODA a informação para preenchimento de ficha pré-anestésica.
-
+/* ── Extraction prompt ── */
+const EXTRACTION_PROMPT=`És um assistente médico especializado em anestesiologia. Analisa o documento clínico e extrai TODA a informação para preenchimento de ficha pré-anestésica.
 Devolve APENAS um objeto JSON válido, sem markdown, sem blocos de código.
+{"pid":{"nome":"","processo":"","dob":"YYYY-MM-DD","sexo":"M|F"},"med":{"altura":"","peso":""},
+"ant":{"hta":false,"cardiopatia_isq":false,"insuf_cardiaca":false,"arritmia":false,"valvulopatia":false,"dap":false,"txt_cardiovascular":"",
+"dpoc":false,"asma":false,"insuf_resp":false,"apneia":false,"txt_respiratorio":"",
+"avc":false,"ait":false,"epilepsia":false,"demencia":false,"parkinson":false,"txt_neurologico":"",
+"dm_oral":false,"dm_insulina":false,"hipotiroidismo":false,"hipertiroidismo":false,"txt_endocrino":"",
+"insuf_renal":false,"dialise":false,"insuf_hepatica":false,"cirrose":false,"txt_renal":"",
+"coagulopatia":false,"anticoagulacao":false,"anemia_cronica":false,"neoplasia":false,"quimio":false,"txt_hemato":"","txt_outros":""},
+"cirurgias":[{"descricao":"","tecnica":"AG|AG_IOT|AG_ML|raqui|epidural|plexo|local|sedacao|outra","data":"YYYY-MM-DD","intercorrencias":""}],
+"meds":[{"nome":"","dose":"","freq":"","via":"oral|sc|iv|inal|outra"}],
+"alergias":[{"substancia":"","reacao":""}],
+"ecg":{"data":"","ritmo":"sinusal|fa|flutter|bav1|bav2|bav3|bbce|bbcd|outro","fc":"","pr":"","qrs":"","qtc":"","resultado":""},
+"labs":{"data":"","hemoglobina":"","plaquetas":"","inr":"","aptt":"","tp":"","creatinina":"","sodio":"","potassio":"","ureia":"","tsh":"","t4livre":""},
+"via":{"mobilidade":"normal|reduzida|muito_red","abertura":">4cm|3-4cm|<3cm","mallampati":"I|II|III|IV","dtm":">6.5cm|6-6.5cm|<6cm","protusao":"A|B|C","obs":""},
+"fieldsFound":[],"fieldsNotFound":[],"observations":""}
+Regras: booleans true só se explicitamente mencionado; arrays vazios se sem dados; nunca inventar dados; remover unidades dos números.`;
 
-{
-  "pid": { "nome": "", "processo": "", "dob": "YYYY-MM-DD ou vazio", "sexo": "M|F ou vazio" },
-  "med": { "altura": "", "peso": "" },
-  "ant": {
-    "hta": false, "cardiopatia_isq": false, "insuf_cardiaca": false, "arritmia": false,
-    "valvulopatia": false, "dap": false, "txt_cardiovascular": "",
-    "dpoc": false, "asma": false, "insuf_resp": false, "apneia": false, "txt_respiratorio": "",
-    "avc": false, "ait": false, "epilepsia": false, "demencia": false, "parkinson": false, "txt_neurologico": "",
-    "dm_oral": false, "dm_insulina": false, "hipotiroidismo": false, "hipertiroidismo": false, "txt_endocrino": "",
-    "insuf_renal": false, "dialise": false, "insuf_hepatica": false, "cirrose": false, "txt_renal": "",
-    "coagulopatia": false, "anticoagulacao": false, "anemia_cronica": false, "neoplasia": false, "quimio": false, "txt_hemato": "",
-    "txt_outros": ""
-  },
-  "cirurgias": [{ "descricao": "", "tecnica": "AG|AG_IOT|AG_ML|raqui|epidural|plexo|local|sedacao|outra", "data": "", "intercorrencias": "" }],
-  "meds": [{ "nome": "", "dose": "", "freq": "", "via": "oral|sc|iv|inal|outra" }],
-  "alergias": [{ "substancia": "", "reacao": "" }],
-  "ecg": { "data": "", "ritmo": "sinusal|fa|flutter|bav1|bav2|bav3|bbce|bbcd|outro", "fc": "", "pr": "", "qrs": "", "qtc": "", "resultado": "" },
-  "labs": { "data": "", "hemoglobina": "", "plaquetas": "", "inr": "", "aptt": "", "tp": "", "creatinina": "", "sodio": "", "potassio": "", "ureia": "", "tsh": "", "t4livre": "" },
-  "via": { "mobilidade": "normal|reduzida|muito_red", "abertura": ">4cm|3-4cm|<3cm", "mallampati": "I|II|III|IV", "dtm": ">6.5cm|6-6.5cm|<6cm", "protusao": "A|B|C", "obs": "" },
-  "fieldsFound": [], "fieldsNotFound": [], "observations": ""
-}
-
-Regras: booleans true apenas se explicitamente mencionado; arrays vazios se não há dados; datas incompletas inferir como YYYY-MM-01; nunca inventar dados; remover unidades dos números.`;
-
-/* ─── File processing ────────────────────────────────────────── */
-async function extractTextFromFile(file) {
-  const ext = file.name.split(".").pop().toLowerCase();
-  if (ext === "txt") return { type: "text", content: await file.text() };
-  if (ext === "docx" || ext === "doc") {
-    const buf = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: buf });
-    return { type: "text", content: result.value };
+/* ── File processing ── */
+async function extractTextFromFile(file){
+  const ext=file.name.split(".").pop().toLowerCase();
+  if(ext==="txt") return {type:"text",content:await file.text()};
+  if(ext==="docx"||ext==="doc"){
+    const buf=await file.arrayBuffer();
+    const result=await mammoth.extractRawText({arrayBuffer:buf});
+    return {type:"text",content:result.value};
   }
-  if (ext === "xlsx" || ext === "xls" || ext === "csv") {
-    const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type: "array" });
-    let content = "";
-    wb.SheetNames.forEach(name => { content += `\n--- ${name} ---\n${XLSX.utils.sheet_to_csv(wb.Sheets[name])}`; });
-    return { type: "text", content };
+  if(ext==="xlsx"||ext==="xls"||ext==="csv"){
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array"});
+    let content="";
+    wb.SheetNames.forEach(name=>{content+=`\n--- ${name} ---\n${XLSX.utils.sheet_to_csv(wb.Sheets[name])}`;});
+    return {type:"text",content};
   }
-  if (ext === "pdf") {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => resolve({ type: "pdf", content: e.target.result.split(",")[1] });
-      reader.onerror = reject;
+  if(ext==="pdf"){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=e=>resolve({type:"pdf",content:e.target.result.split(",")[1]});
+      reader.onerror=reject;
       reader.readAsDataURL(file);
     });
   }
   throw new Error(`Formato não suportado: .${ext}`);
 }
 
-async function callClaudeExtract(fileData) {
-  const userContent = fileData.type === "pdf"
-    ? [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: fileData.content } }, { type: "text", text: "Extrai todos os dados clínicos conforme as instruções." }]
-    : `Extrai os dados clínicos:\n\n${fileData.content}`;
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system: EXTRACTION_PROMPT, messages: [{ role: "user", content: userContent }] }),
+async function callClaudeExtract(fileData){
+  const apiKey=sessionStorage.getItem("anthropic_key");
+  if(!apiKey) throw new Error("API Key não configurada. Clica no ícone 🔑 no topo.");
+  const userContent=fileData.type==="pdf"
+    ?[{type:"document",source:{type:"base64",media_type:"application/pdf",data:fileData.content}},
+      {type:"text",text:"Extrai todos os dados clínicos conforme as instruções."}]
+    :`Extrai os dados clínicos:\n\n${fileData.content}`;
+  const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":apiKey,
+      "anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:4000,system:EXTRACTION_PROMPT,
+      messages:[{role:"user",content:userContent}]}),
   });
-  if (!resp.ok) throw new Error(`Erro API: ${resp.status}`);
-  const data = await resp.json();
-  const raw = data.content.filter(b => b.type === "text").map(b => b.text).join("");
-  try { return JSON.parse(raw.replace(/```json|```/g, "").trim()); }
-  catch { throw new Error("Resposta inválida da IA. Tenta novamente."); }
+  if(!resp.ok){
+    if(resp.status===401) throw new Error("API Key inválida. Verifica em console.anthropic.com");
+    throw new Error(`Erro API: ${resp.status}`);
+  }
+  const data=await resp.json();
+  const raw=data.content.filter(b=>b.type==="text").map(b=>b.text).join("");
+  try{return JSON.parse(raw.replace(/```json|```/g,"").trim());}
+  catch{throw new Error("Resposta inválida da IA. Tenta novamente.");}
 }
 
-/* ─── ImportPanel ────────────────────────────────────────────── */
-function ImportPanel({ onImport }) {
-  const [status, setStatus] = useState("idle");
-  const [result, setResult] = useState(null);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [dragOver, setDragOver] = useState(false);
-  const [fileName, setFileName] = useState("");
-  const fileRef = useRef();
-
-  const handleFile = useCallback(async (file) => {
-    if (!file) return;
-    setFileName(file.name); setStatus("loading"); setResult(null); setErrorMsg("");
-    try {
-      const fileData = await extractTextFromFile(file);
-      const extracted = await callClaudeExtract(fileData);
-      setResult(extracted); setStatus("done"); onImport(extracted);
-    } catch (e) { setErrorMsg(e.message || "Erro desconhecido"); setStatus("error"); }
-  }, [onImport]);
-
-  const onDrop = useCallback((e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }, [handleFile]);
-
-  return (
-    <div style={{ ...cardSt, background: `${C.purple}08`, borderColor: `${C.purple}30`, marginBottom: 20, animation: "slideDown .3s ease" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: `${C.purple}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
-        <div>
-          <div style={{ fontFamily: C.head, fontSize: 13, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.1em" }}>Importação Inteligente</div>
-          <div style={{ fontSize: 11, color: C.textDim }}>Word · PDF · Excel · TXT — preenchimento automático por IA</div>
-        </div>
-      </div>
-
-      {status === "idle" && (
-        <div className="import-drop" style={{ padding: "26px 20px", textAlign: "center", cursor: "pointer" }}
-          onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop} onClick={() => fileRef.current.click()}>
-          <div style={{ fontSize: 30, marginBottom: 8 }}>📂</div>
-          <div style={{ fontFamily: C.head, fontSize: 13, color: C.textBright, marginBottom: 5 }}>Arrasta o ficheiro ou clica para escolher</div>
-          <div style={{ fontSize: 11, color: C.textDim }}>.docx · .pdf · .xlsx · .txt</div>
-          <input ref={fileRef} type="file" accept=".docx,.doc,.pdf,.xlsx,.xls,.csv,.txt" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
-        </div>
-      )}
-
-      {status === "loading" && (
-        <div style={{ textAlign: "center", padding: "28px 0" }}>
-          <div style={{ width: 38, height: 38, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.purple}`, borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 14px" }} />
-          <div style={{ fontFamily: C.head, fontSize: 13, color: C.purple, marginBottom: 4 }}>A analisar documento...</div>
-          <div style={{ fontSize: 11, color: C.textDim, animation: "pulse 2s infinite" }}>{fileName}</div>
-        </div>
-      )}
-
-      {status === "done" && result && (
-        <div style={{ animation: "fadeIn .3s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 18 }}>✅</span>
-            <div>
-              <div style={{ fontFamily: C.head, fontSize: 12, color: C.green, fontWeight: 700 }}>Importação concluída</div>
-              <div style={{ fontSize: 11, color: C.textDim }}>{fileName}</div>
-            </div>
-          </div>
-          {result.fieldsFound?.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 10, color: C.textDim, fontFamily: C.head, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Campos preenchidos ({result.fieldsFound.length})</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {result.fieldsFound.slice(0, 12).map((f, i) => (
-                  <span key={i} style={{ background: `${C.green}15`, color: C.green, border: `1px solid ${C.green}30`, borderRadius: 20, padding: "2px 8px", fontSize: 10, fontFamily: C.head }}>{f}</span>
-                ))}
-                {result.fieldsFound.length > 12 && <span style={{ fontSize: 10, color: C.textDim }}>+{result.fieldsFound.length - 12}</span>}
-              </div>
-            </div>
-          )}
-          {result.fieldsNotFound?.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 10, color: C.textDim, fontFamily: C.head, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Preencher manualmente</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {result.fieldsNotFound.map((f, i) => (
-                  <span key={i} style={{ background: `${C.yellow}15`, color: C.yellow, border: `1px solid ${C.yellow}30`, borderRadius: 20, padding: "2px 8px", fontSize: 10, fontFamily: C.head }}>{f}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {result.observations && <div style={{ fontSize: 12, color: C.text, background: C.surface, borderRadius: 7, padding: "8px 12px", fontStyle: "italic", marginBottom: 8 }}><span style={{ color: C.accent, fontWeight: 700, fontStyle: "normal" }}>Nota: </span>{result.observations}</div>}
-          <Btn small variant="ghost" onClick={() => { setStatus("idle"); setFileName(""); setResult(null); }}>Importar outro ficheiro</Btn>
-        </div>
-      )}
-
-      {status === "error" && (
-        <div style={{ animation: "fadeIn .3s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: `${C.red}12`, border: `1px solid ${C.red}30`, borderRadius: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
-            <div>
-              <div style={{ fontFamily: C.head, fontSize: 12, color: C.red, fontWeight: 700 }}>Erro na importação</div>
-              <div style={{ fontSize: 11, color: C.textDim }}>{errorMsg}</div>
-            </div>
-          </div>
-          <Btn small variant="ghost" onClick={() => { setStatus("idle"); setFileName(""); }}>Tentar novamente</Btn>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── PrintReport ────────────────────────────────────────────── */
-function PrintReport({ pid, idade, bmi, bmiInfo, med, ant, cirurgias, meds, alergias, ecg, labs, via, asa, rcri, airwayRisk, apfel, plano }) {
-  const today = new Date().toLocaleDateString("pt-PT");
-  const fmtDate = (d) => { try { return d ? new Date(d + "T12:00:00").toLocaleDateString("pt-PT") : "—"; } catch { return "—"; } };
-
-  const ps = {
-    wrap: { fontFamily: "Arial, Helvetica, sans-serif", color: "#1a1a1a", fontSize: "9pt", lineHeight: "1.45" },
-    hdr: { textAlign: "center", borderBottom: "2pt solid #1a3a6b", paddingBottom: "8pt", marginBottom: "12pt" },
-    sec: { marginBottom: "10pt", pageBreakInside: "avoid" },
-    secT: { fontSize: "8pt", fontWeight: "bold", color: "#1a3a6b", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5pt solid #1a3a6b", paddingBottom: "2pt", marginBottom: "5pt" },
-    row: { display: "flex", gap: "4pt", marginBottom: "2pt" },
-    lbl: { fontSize: "7pt", fontWeight: "bold", color: "#777", textTransform: "uppercase", letterSpacing: "0.05em", minWidth: "85pt", flexShrink: 0 },
-    val: { fontSize: "9pt", color: "#1a1a1a" },
-    tbl: { width: "100%", borderCollapse: "collapse", fontSize: "7.5pt", marginBottom: "4pt" },
-    th: { backgroundColor: "#eef2f8", border: "0.5pt solid #ccc", padding: "2.5pt 4pt", textAlign: "left", fontWeight: "bold", color: "#333", fontSize: "7pt", textTransform: "uppercase", letterSpacing: "0.04em" },
-    td: { border: "0.5pt solid #ddd", padding: "2.5pt 4pt", color: "#1a1a1a", verticalAlign: "top" },
-    chk: (v) => ({ fontSize: "7.5pt", color: v ? "#1a1a1a" : "#bbb", display: "inline-flex", alignItems: "center", gap: "3pt", marginRight: "10pt", marginBottom: "3pt" }),
+/* ── ApiKeyModal ── */
+function ApiKeyModal({onSave,onClose}){
+  const [key,setKey]=useState("");
+  const [error,setError]=useState("");
+  const [saved,setSaved]=useState(false);
+  const handleSave=()=>{
+    if(!key.trim()){setError("Introduz a tua API Key");return;}
+    if(!key.startsWith("sk-ant-")){setError("Deve começar com sk-ant-...");return;}
+    sessionStorage.setItem("anthropic_key",key.trim());
+    setSaved(true);
+    setTimeout(()=>onSave(key.trim()),700);
   };
-
-  const riskColor = (level) => level === "Baixo" || level === "Muito Baixo" ? "#006633" : level === "Moderado" ? "#c87000" : "#cc0000";
-  const riskBg = (level) => level === "Baixo" || level === "Muito Baixo" ? "#f0fff8" : level === "Moderado" ? "#fffbef" : "#fff0f2";
-  const riskBorder = (level) => level === "Baixo" || level === "Muito Baixo" ? "#00cc88" : level === "Moderado" ? "#f5b800" : "#ff3355";
-
-  return (
-    <div className="print-only" style={{ display: "none" }}>
-      <div style={ps.wrap}>
-
-        {/* ── CABEÇALHO ── */}
-        <div style={ps.hdr}>
-          <div style={{ fontSize: "12pt", fontWeight: "bold", color: "#1a3a6b", letterSpacing: "0.08em", marginBottom: "2pt" }}>SERVIÇO DE ANESTESIOLOGIA</div>
-          <div style={{ fontSize: "10pt", fontWeight: "bold", letterSpacing: "0.06em", marginBottom: "3pt" }}>FICHA DE CONSULTA PRÉ-ANESTÉSICA</div>
-          <div style={{ fontSize: "7pt", color: "#777" }}>Documento gerado em {today}</div>
-        </div>
-
-        {/* ── 1. IDENTIFICAÇÃO ── */}
-        <div style={ps.sec}>
-          <div style={ps.secT}>1. Identificação do Doente</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2pt 16pt" }}>
-            <div style={ps.row}><span style={ps.lbl}>Nome</span><span style={{ ...ps.val, fontWeight: "bold" }}>{pid.nome || "—"}</span></div>
-            <div style={ps.row}><span style={ps.lbl}>Nº Processo</span><span style={ps.val}>{pid.processo || "—"}</span></div>
-            <div style={ps.row}><span style={ps.lbl}>Data Nasc.</span><span style={ps.val}>{fmtDate(pid.dob)}</span></div>
-            <div style={ps.row}><span style={ps.lbl}>Idade / Sexo</span><span style={ps.val}>{idade ? `${idade} anos` : "—"} / {pid.sexo === "M" ? "Masculino" : pid.sexo === "F" ? "Feminino" : "—"}</span></div>
-            <div style={ps.row}><span style={ps.lbl}>Altura / Peso</span><span style={ps.val}>{med.altura ? `${med.altura} cm` : "—"} / {med.peso ? `${med.peso} kg` : "—"}</span></div>
-            <div style={ps.row}><span style={ps.lbl}>IMC</span><span style={{ ...ps.val, fontWeight: bmi ? "bold" : "normal" }}>{bmi ? `${bmi} kg/m²` : "—"}{bmiInfo ? ` — ${bmiInfo.label}` : ""}</span></div>
-          </div>
-        </div>
-
-        {/* ── 2. ANTECEDENTES ── */}
-        <div style={ps.sec}>
-          <div style={ps.secT}>2. Antecedentes Pessoais</div>
-          {ANT_SYSTEMS.map(sys => {
-            const active = sys.items.filter(it => ant[it.k]);
-            const hasTxt = ant[sys.txtKey];
-            return (
-              <div key={sys.id} style={{ marginBottom: "5pt", paddingBottom: "5pt", borderBottom: "0.3pt solid #eee" }}>
-                <div style={{ fontSize: "7.5pt", fontWeight: "bold", color: active.length > 0 ? "#1a3a6b" : "#aaa", marginBottom: "2pt", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  {sys.label}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
-                  {sys.items.map(it => (
-                    <span key={it.k} style={ps.chk(ant[it.k])}>{ant[it.k] ? "☑" : "☐"} {it.l}</span>
-                  ))}
-                </div>
-                {hasTxt && <div style={{ fontSize: "7.5pt", color: "#444", fontStyle: "italic", marginTop: "2pt", paddingLeft: "10pt" }}>↳ {ant[sys.txtKey]}</div>}
-              </div>
-            );
-          })}
-          {ant.txt_outros && (
-            <div style={{ fontSize: "8pt", color: "#333", marginTop: "4pt" }}><strong>Outros:</strong> {ant.txt_outros}</div>
-          )}
-        </div>
-
-        {/* ── 3. CIRURGIAS ── */}
-        <div style={ps.sec}>
-          <div style={ps.secT}>3. Cirurgias Anteriores</div>
-          {cirurgias.length > 0 ? (
-            <table style={ps.tbl}>
-              <thead>
-                <tr>
-                  <th style={{ ...ps.th, width: "12%" }}>Data</th>
-                  <th style={{ ...ps.th, width: "30%" }}>Descrição</th>
-                  <th style={{ ...ps.th, width: "22%" }}>Técnica Anestésica</th>
-                  <th style={{ ...ps.th, width: "36%" }}>Intercorrências</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cirurgias.map((c, i) => (
-                  <tr key={i}>
-                    <td style={ps.td}>{fmtDate(c.data)}</td>
-                    <td style={ps.td}>{c.descricao || "—"}</td>
-                    <td style={ps.td}>{TECNICA_LABELS[c.tecnica] || c.tecnica || "—"}</td>
-                    <td style={ps.td}>{c.intercorrencias || "Sem intercorrências registadas"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div style={{ fontSize: "8pt", color: "#999", fontStyle: "italic" }}>Sem cirurgias anteriores registadas</div>
-          )}
-        </div>
-
-        {/* ── 4. MEDICAÇÃO & ALERGIAS ── */}
-        <div style={ps.sec}>
-          <div style={ps.secT}>4. Medicação Habitual e Alergias</div>
-          {meds.some(m => m.nome) ? (
-            <table style={{ ...ps.tbl, marginBottom: "5pt" }}>
-              <thead>
-                <tr>
-                  <th style={{ ...ps.th, width: "35%" }}>Medicamento</th>
-                  <th style={{ ...ps.th, width: "20%" }}>Dose</th>
-                  <th style={{ ...ps.th, width: "25%" }}>Frequência</th>
-                  <th style={{ ...ps.th, width: "20%" }}>Via</th>
-                </tr>
-              </thead>
-              <tbody>
-                {meds.filter(m => m.nome).map((m, i) => (
-                  <tr key={i}>
-                    <td style={ps.td}>{m.nome}</td>
-                    <td style={ps.td}>{m.dose || "—"}</td>
-                    <td style={ps.td}>{m.freq || "—"}</td>
-                    <td style={ps.td}>{m.via || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div style={{ fontSize: "8pt", color: "#999", fontStyle: "italic", marginBottom: "5pt" }}>Sem medicação habitual registada</div>
-          )}
-          {alergias.some(a => a.substancia) ? (
-            <div style={{ backgroundColor: "#fff5f5", border: "0.75pt solid #ffbbbb", borderRadius: "3pt", padding: "4pt 8pt", fontSize: "8pt" }}>
-              <strong style={{ color: "#cc0000" }}>⚠ ALERGIAS MEDICAMENTOSAS:&nbsp;</strong>
-              {alergias.filter(a => a.substancia).map((a, i) => <span key={i}>{a.substancia}{a.reacao ? ` (${a.reacao})` : ""}{"  "}</span>)}
-            </div>
-          ) : (
-            <div style={{ fontSize: "8pt", color: "#555" }}>Alergias medicamentosas: <strong>Não conhecidas</strong></div>
-          )}
-        </div>
-
-        {/* ── 5. EXAMES ── */}
-        <div style={ps.sec}>
-          <div style={ps.secT}>5. Exames Auxiliares de Diagnóstico</div>
-
-          {(ecg.ritmo || ecg.resultado || ecg.fc) && (
-            <div style={{ marginBottom: "6pt", padding: "4pt 8pt", background: "#f8faff", border: "0.5pt solid #d0ddf0", borderRadius: "3pt" }}>
-              <div style={{ fontSize: "7.5pt", fontWeight: "bold", color: "#555", marginBottom: "2pt" }}>
-                ECG{ecg.data ? ` — ${fmtDate(ecg.data)}` : ""}
-              </div>
-              <div style={{ fontSize: "8.5pt" }}>
-                {[RITMO_LABELS[ecg.ritmo] || ecg.ritmo, ecg.fc ? `FC ${ecg.fc} bpm` : "", ecg.pr ? `PR ${ecg.pr} ms` : "", ecg.qrs ? `QRS ${ecg.qrs} ms` : "", ecg.qtc ? `QTc ${ecg.qtc} ms` : ""].filter(Boolean).join(" · ")}
-              </div>
-              {ecg.resultado && <div style={{ fontSize: "8pt", color: "#444", fontStyle: "italic", marginTop: "2pt" }}>{ecg.resultado}</div>}
-            </div>
-          )}
-
-          {(() => {
-            const fields = labFields(pid.sexo).filter(lf => labs[lf.key]);
-            if (!fields.length) return <div style={{ fontSize: "8pt", color: "#999", fontStyle: "italic" }}>Sem análises laboratoriais registadas</div>;
-            return (
-              <div>
-                <div style={{ fontSize: "7.5pt", fontWeight: "bold", color: "#555", marginBottom: "3pt" }}>
-                  Análises Laboratoriais{labs.data ? ` — ${fmtDate(labs.data)}` : ""}
-                </div>
-                <table style={ps.tbl}>
-                  <thead>
-                    <tr>
-                      {fields.map(lf => <th key={lf.key} style={ps.th}>{lf.label}{lf.unit ? `\n(${lf.unit})` : ""}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      {fields.map(lf => {
-                        const v = parseFloat(labs[lf.key]);
-                        const abn = !isNaN(v) && (v < lf.lo || v > lf.hi);
-                        return (
-                          <td key={lf.key} style={{ ...ps.td, fontWeight: abn ? "bold" : "normal", color: abn ? "#cc0000" : "#1a1a1a", backgroundColor: abn ? "#fff0f0" : "white", textAlign: "center" }}>
-                            {labs[lf.key]}{abn ? (v < lf.lo ? " ↓" : " ↑") : ""}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    <tr>
-                      {fields.map(lf => <td key={lf.key} style={{ ...ps.td, fontSize: "6.5pt", color: "#aaa", fontStyle: "italic", textAlign: "center", backgroundColor: "#fafafa" }}>Ref: {lf.ref}</td>)}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* ── 6. VIA AÉREA ── */}
-        <div style={ps.sec}>
-          <div style={ps.secT}>6. Avaliação da Via Aérea</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "4pt 20pt", marginBottom: "5pt" }}>
-            {via.mobilidade && <span style={{ fontSize: "8pt" }}><strong>Mobilidade cervical:</strong> {via.mobilidade === "normal" ? "Normal (>35°)" : via.mobilidade === "reduzida" ? "Reduzida (15–35°)" : "Muito reduzida (<15°)"}</span>}
-            {via.abertura && <span style={{ fontSize: "8pt" }}><strong>Abertura boca:</strong> {via.abertura}</span>}
-            {via.mallampati && <span style={{ fontSize: "8pt" }}><strong>Mallampati:</strong> Classe {via.mallampati}</span>}
-            {via.dtm && <span style={{ fontSize: "8pt" }}><strong>Distância tiromentoniana:</strong> {via.dtm}</span>}
-            {via.protusao && <span style={{ fontSize: "8pt" }}><strong>Protusão mandibular:</strong> Classe {via.protusao}</span>}
-          </div>
-          {via.obs && <div style={{ fontSize: "8pt", fontStyle: "italic", color: "#444", marginBottom: "5pt" }}>Obs: {via.obs}</div>}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6pt", padding: "3pt 10pt", borderRadius: "3pt", backgroundColor: riskBg(airwayRisk.level), border: `0.75pt solid ${riskBorder(airwayRisk.level)}` }}>
-            <span style={{ fontSize: "7pt", fontWeight: "bold", color: "#555" }}>RISCO GLOBAL:</span>
-            <span style={{ fontSize: "8.5pt", fontWeight: "bold", color: riskColor(airwayRisk.level) }}>
-              {airwayRisk.level} — {airwayRisk.desc}
-            </span>
-          </div>
-        </div>
-
-        {/* ── 7. ÍNDICES DE RISCO ── */}
-        <div style={{ ...ps.sec }}>
-          <div style={ps.secT}>7. Índices de Risco Anestésico</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "5pt" }}>
-            {asa && (
-              <div style={{ padding: "5pt 7pt", border: "0.5pt solid #ddd", borderRadius: "3pt", borderLeft: "2pt solid #1a3a6b" }}>
-                <div style={{ fontSize: "6.5pt", fontWeight: "bold", color: "#777", textTransform: "uppercase", marginBottom: "2pt" }}>Classificação ASA</div>
-                <div style={{ fontSize: "13pt", fontWeight: "bold", color: "#1a1a1a" }}>ASA {asa}</div>
-              </div>
-            )}
-            {bmi && (
-              <div style={{ padding: "5pt 7pt", border: "0.5pt solid #ddd", borderRadius: "3pt", borderLeft: "2pt solid #1a3a6b" }}>
-                <div style={{ fontSize: "6.5pt", fontWeight: "bold", color: "#777", textTransform: "uppercase", marginBottom: "2pt" }}>IMC</div>
-                <div style={{ fontSize: "12pt", fontWeight: "bold" }}>{bmi}</div>
-                <div style={{ fontSize: "7pt", color: "#555" }}>{bmiInfo?.label}</div>
-              </div>
-            )}
-            <div style={{ padding: "5pt 7pt", border: "0.5pt solid #ddd", borderRadius: "3pt", borderLeft: `2pt solid ${riskBorder(rcri.level)}` }}>
-              <div style={{ fontSize: "6.5pt", fontWeight: "bold", color: "#777", textTransform: "uppercase", marginBottom: "2pt" }}>RCRI (Lee)</div>
-              <div style={{ fontSize: "13pt", fontWeight: "bold" }}>{rcri.score} <span style={{ fontSize: "8pt", fontWeight: "normal" }}>{rcri.pct}</span></div>
-              <div style={{ fontSize: "7pt", fontWeight: "bold", color: riskColor(rcri.level) }}>{rcri.level}</div>
-              {rcri.factors.length > 0 && <div style={{ fontSize: "6pt", color: "#888", marginTop: "2pt" }}>{rcri.factors.join(" · ")}</div>}
-            </div>
-            {apfel && (
-              <div style={{ padding: "5pt 7pt", border: "0.5pt solid #ddd", borderRadius: "3pt", borderLeft: `2pt solid ${riskBorder(apfel.level)}` }}>
-                <div style={{ fontSize: "6.5pt", fontWeight: "bold", color: "#777", textTransform: "uppercase", marginBottom: "2pt" }}>Apfel (NVPO)</div>
-                <div style={{ fontSize: "13pt", fontWeight: "bold" }}>{apfel.score} <span style={{ fontSize: "8pt", fontWeight: "normal" }}>{apfel.risk}</span></div>
-                <div style={{ fontSize: "7pt", fontWeight: "bold", color: riskColor(apfel.level) }}>{apfel.level}</div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── 8. PLANO ANESTÉSICO ── */}
-        <div style={{ ...ps.sec, marginBottom: "16pt" }}>
-          <div style={ps.secT}>8. Plano Anestésico Proposto</div>
-          <div style={{ minHeight: "55pt", border: "0.5pt solid #ccc", borderRadius: "3pt", padding: "5pt 8pt", fontSize: "8.5pt", whiteSpace: "pre-wrap", color: "#1a1a1a" }}>
-            {plano || " "}
-          </div>
-        </div>
-
-        {/* ── ASSINATURA ── */}
-        <div style={{ borderTop: "0.5pt solid #ccc", paddingTop: "10pt", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30pt" }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ height: "28pt" }} />
-            <div style={{ borderTop: "0.75pt solid #333", paddingTop: "4pt", fontSize: "7pt", color: "#666" }}>Médico Anestesiologista</div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ height: "28pt" }} />
-            <div style={{ borderTop: "0.75pt solid #333", paddingTop: "4pt", fontSize: "7pt", color: "#666" }}>Cédula Profissional / Data</div>
-          </div>
-        </div>
-        <div style={{ marginTop: "8pt", textAlign: "center", fontSize: "6pt", color: "#ccc", borderTop: "0.3pt solid #eee", paddingTop: "5pt" }}>
-          Ficha de Consulta Pré-Anestésica · Gerado em {today}
+  return <div style={{position:"fixed",inset:0,background:"rgba(4,9,26,0.96)",display:"flex",
+    alignItems:"center",justifyContent:"center",zIndex:1000,padding:20}}>
+    <div style={{background:C.card,border:`1px solid #1e3050`,borderRadius:16,padding:32,maxWidth:420,width:"100%"}}>
+      <div style={{textAlign:"center",marginBottom:20}}>
+        <div style={{fontSize:36,marginBottom:10}}>🔑</div>
+        <div style={{fontFamily:C.head,fontSize:16,fontWeight:800,color:C.textBright,
+          textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>API Key Anthropic</div>
+        <div style={{fontSize:13,color:C.text,lineHeight:1.6}}>
+          Para a importação inteligente funcionar, introduz a tua chave da API Anthropic.
+          <br/><span style={{color:C.textDim,fontSize:12}}>Fica guardada apenas nesta sessão do browser — nunca sai do teu dispositivo.</span>
         </div>
       </div>
+      <input type="password" value={key} onChange={e=>{setKey(e.target.value);setError("");}}
+        placeholder="sk-ant-api03-..."
+        style={{width:"100%",background:C.surface,border:`1px solid ${error?"#ff3355":"#1e3050"}`,
+          borderRadius:8,color:C.textBright,padding:"11px 14px",fontSize:13,
+          fontFamily:C.mono,outline:"none",marginBottom:error?6:14}}
+        onKeyDown={e=>e.key==="Enter"&&handleSave()}/>
+      {error&&<div style={{fontSize:12,color:C.red,marginBottom:10}}>{error}</div>}
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={handleSave} style={{flex:1,background:saved?C.green:C.accent,color:"#fff",border:"none",
+          borderRadius:8,padding:11,fontFamily:C.head,fontWeight:700,fontSize:13,cursor:"pointer",
+          letterSpacing:"0.05em",transition:"background .3s"}}>
+          {saved?"✓ Guardada!":"Guardar e Continuar"}
+        </button>
+        {onClose&&<button onClick={onClose} style={{background:C.border,color:C.text,border:"none",
+          borderRadius:8,padding:"11px 16px",fontFamily:C.head,fontWeight:700,fontSize:13,cursor:"pointer"}}>
+          Fechar</button>}
+      </div>
+      <div style={{fontSize:11,color:C.textDim,marginTop:12,textAlign:"center",lineHeight:1.5}}>
+        Obtém em <strong style={{color:C.accent}}>console.anthropic.com</strong> → API Keys
+      </div>
     </div>
-  );
+  </div>;
 }
 
-/* ─── MAIN APP ───────────────────────────────────────────────── */
-export default function App() {
-  const [tab, setTab] = useState(0);
-  const [showImport, setShowImport] = useState(false);
+/* ── ImportPanel ── */
+function ImportPanel({onImport}){
+  const [status,setStatus]=useState("idle");
+  const [result,setResult]=useState(null);
+  const [errorMsg,setErrorMsg]=useState("");
+  const [dragOver,setDragOver]=useState(false);
+  const [fileName,setFileName]=useState("");
+  const fileRef=useRef();
+  const handleFile=useCallback(async(file)=>{
+    if(!file)return;
+    if(!sessionStorage.getItem("anthropic_key")){setErrorMsg("Configura primeiro a API Key (botão 🔑 no topo)");setStatus("error");return;}
+    setFileName(file.name);setStatus("loading");setResult(null);setErrorMsg("");
+    try{
+      const fileData=await extractTextFromFile(file);
+      const extracted=await callClaudeExtract(fileData);
+      setResult(extracted);setStatus("done");onImport(extracted);
+    }catch(e){setErrorMsg(e.message||"Erro desconhecido");setStatus("error");}
+  },[onImport]);
+  const onDrop=useCallback((e)=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);},[handleFile]);
 
-  const [pid, setPid] = useState({ nome: "", processo: "", dob: "", sexo: "" });
-  const [med, setMed] = useState({ altura: "", peso: "" });
-  const [ant, setAnt] = useState({
-    hta: false, cardiopatia_isq: false, insuf_cardiaca: false, arritmia: false, valvulopatia: false, dap: false, txt_cardiovascular: "",
-    dpoc: false, asma: false, insuf_resp: false, apneia: false, txt_respiratorio: "",
-    avc: false, ait: false, epilepsia: false, demencia: false, parkinson: false, txt_neurologico: "",
-    dm_oral: false, dm_insulina: false, hipotiroidismo: false, hipertiroidismo: false, txt_endocrino: "",
-    insuf_renal: false, dialise: false, insuf_hepatica: false, cirrose: false, txt_renal: "",
-    coagulopatia: false, anticoagulacao: false, anemia_cronica: false, neoplasia: false, quimio: false, txt_hemato: "",
-    txt_outros: "",
+  return <div style={{...cardSt,background:`${C.purple}08`,borderColor:`${C.purple}30`,marginBottom:20,animation:"slideDown .3s ease"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+      <div style={{width:32,height:32,borderRadius:8,background:`${C.purple}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🤖</div>
+      <div>
+        <div style={{fontFamily:C.head,fontSize:13,fontWeight:700,color:C.purple,textTransform:"uppercase",letterSpacing:"0.1em"}}>Importação Inteligente</div>
+        <div style={{fontSize:11,color:C.textDim}}>Word · PDF · Excel · TXT — preenchimento automático por IA</div>
+      </div>
+    </div>
+    {status==="idle"&&<div className="import-drop" style={{padding:"26px 20px",textAlign:"center",cursor:"pointer"}}
+      onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)}
+      onDrop={onDrop} onClick={()=>fileRef.current.click()}>
+      <div style={{fontSize:30,marginBottom:8}}>📂</div>
+      <div style={{fontFamily:C.head,fontSize:13,color:C.textBright,marginBottom:5}}>Arrasta o ficheiro ou clica para escolher</div>
+      <div style={{fontSize:11,color:C.textDim}}>.docx · .pdf · .xlsx · .txt</div>
+      <input ref={fileRef} type="file" accept=".docx,.doc,.pdf,.xlsx,.xls,.csv,.txt"
+        style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
+    </div>}
+    {status==="loading"&&<div style={{textAlign:"center",padding:"28px 0"}}>
+      <div style={{width:38,height:38,border:`3px solid ${C.border}`,borderTop:`3px solid ${C.purple}`,borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 14px"}}/>
+      <div style={{fontFamily:C.head,fontSize:13,color:C.purple,marginBottom:4}}>A analisar documento...</div>
+      <div style={{fontSize:11,color:C.textDim,animation:"pulse 2s infinite"}}>{fileName}</div>
+    </div>}
+    {status==="done"&&result&&<div style={{animation:"fadeIn .3s ease"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:`${C.green}12`,border:`1px solid ${C.green}30`,borderRadius:8,marginBottom:10}}>
+        <span style={{fontSize:18}}>✅</span>
+        <div><div style={{fontFamily:C.head,fontSize:12,color:C.green,fontWeight:700}}>Importação concluída</div>
+          <div style={{fontSize:11,color:C.textDim}}>{fileName}</div></div>
+      </div>
+      {result.fieldsFound?.length>0&&<div style={{marginBottom:8}}>
+        <div style={{fontSize:10,color:C.textDim,fontFamily:C.head,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5}}>Campos preenchidos ({result.fieldsFound.length})</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+          {result.fieldsFound.slice(0,12).map((f,i)=><span key={i} style={{background:`${C.green}15`,color:C.green,border:`1px solid ${C.green}30`,borderRadius:20,padding:"2px 8px",fontSize:10,fontFamily:C.head}}>{f}</span>)}
+        </div>
+      </div>}
+      {result.observations&&<div style={{fontSize:12,color:C.text,background:C.surface,borderRadius:7,padding:"8px 12px",fontStyle:"italic",marginBottom:8}}><span style={{color:C.accent,fontWeight:700,fontStyle:"normal"}}>Nota: </span>{result.observations}</div>}
+      <Btn small variant="ghost" onClick={()=>{setStatus("idle");setFileName("");setResult(null);}}>Importar outro ficheiro</Btn>
+    </div>}
+    {status==="error"&&<div style={{animation:"fadeIn .3s ease"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:`${C.red}12`,border:`1px solid ${C.red}30`,borderRadius:8,marginBottom:10}}>
+        <span style={{fontSize:18}}>⚠️</span>
+        <div><div style={{fontFamily:C.head,fontSize:12,color:C.red,fontWeight:700}}>Erro na importação</div>
+          <div style={{fontSize:11,color:C.textDim}}>{errorMsg}</div></div>
+      </div>
+      <Btn small variant="ghost" onClick={()=>{setStatus("idle");setFileName("");}}>Tentar novamente</Btn>
+    </div>}
+  </div>;
+}
+
+/* ── PrintReport ── */
+function PrintReport({pid,idade,bmi,bmiInfo,med,ant,cirurgias,meds,alergias,ecg,labs,via,asa,rcri,airwayRisk,apfel,plano}){
+  const today=new Date().toLocaleDateString("pt-PT");
+  const fmtDate=(d)=>{try{return d?new Date(d+"T12:00:00").toLocaleDateString("pt-PT"):"—";}catch{return "—";}};
+  const ps={
+    wrap:{fontFamily:"Arial,Helvetica,sans-serif",color:"#1a1a1a",fontSize:"9pt",lineHeight:"1.45"},
+    hdr:{textAlign:"center",borderBottom:"2pt solid #1a3a6b",paddingBottom:"8pt",marginBottom:"12pt"},
+    sec:{marginBottom:"10pt",pageBreakInside:"avoid"},
+    secT:{fontSize:"8pt",fontWeight:"bold",color:"#1a3a6b",textTransform:"uppercase",letterSpacing:"0.08em",borderBottom:"0.5pt solid #1a3a6b",paddingBottom:"2pt",marginBottom:"5pt"},
+    row:{display:"flex",gap:"4pt",marginBottom:"2pt"},
+    lbl:{fontSize:"7pt",fontWeight:"bold",color:"#777",textTransform:"uppercase",letterSpacing:"0.05em",minWidth:"85pt",flexShrink:0},
+    val:{fontSize:"9pt",color:"#1a1a1a"},
+    tbl:{width:"100%",borderCollapse:"collapse",fontSize:"7.5pt",marginBottom:"4pt"},
+    th:{backgroundColor:"#eef2f8",border:"0.5pt solid #ccc",padding:"2.5pt 4pt",textAlign:"left",fontWeight:"bold",color:"#333",fontSize:"7pt",textTransform:"uppercase",letterSpacing:"0.04em"},
+    td:{border:"0.5pt solid #ddd",padding:"2.5pt 4pt",color:"#1a1a1a",verticalAlign:"top"},
+    chk:(v)=>({fontSize:"7.5pt",color:v?"#1a1a1a":"#bbb",display:"inline-flex",alignItems:"center",gap:"3pt",marginRight:"10pt",marginBottom:"3pt"}),
+  };
+  const riskColor=(l)=>l==="Baixo"||l==="Muito Baixo"?"#006633":l==="Moderado"?"#c87000":"#cc0000";
+  const riskBg=(l)=>l==="Baixo"||l==="Muito Baixo"?"#f0fff8":l==="Moderado"?"#fffbef":"#fff0f2";
+  const riskBrd=(l)=>l==="Baixo"||l==="Muito Baixo"?"#00cc88":l==="Moderado"?"#f5b800":"#ff3355";
+  return <div className="print-only" style={{display:"none"}}>
+    <div style={ps.wrap}>
+      <div style={ps.hdr}>
+        <div style={{fontSize:"12pt",fontWeight:"bold",color:"#1a3a6b",letterSpacing:"0.08em",marginBottom:"2pt"}}>SERVIÇO DE ANESTESIOLOGIA</div>
+        <div style={{fontSize:"10pt",fontWeight:"bold",letterSpacing:"0.06em",marginBottom:"3pt"}}>FICHA DE CONSULTA PRÉ-ANESTÉSICA</div>
+        <div style={{fontSize:"7pt",color:"#777"}}>Documento gerado em {today}</div>
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>1. Identificação do Doente</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2pt 16pt"}}>
+          <div style={ps.row}><span style={ps.lbl}>Nome</span><span style={{...ps.val,fontWeight:"bold"}}>{pid.nome||"—"}</span></div>
+          <div style={ps.row}><span style={ps.lbl}>Nº Processo</span><span style={ps.val}>{pid.processo||"—"}</span></div>
+          <div style={ps.row}><span style={ps.lbl}>Data Nasc.</span><span style={ps.val}>{fmtDate(pid.dob)}</span></div>
+          <div style={ps.row}><span style={ps.lbl}>Idade / Sexo</span><span style={ps.val}>{idade?`${idade} anos`:"—"} / {pid.sexo==="M"?"Masculino":pid.sexo==="F"?"Feminino":"—"}</span></div>
+          <div style={ps.row}><span style={ps.lbl}>Altura / Peso</span><span style={ps.val}>{med.altura?`${med.altura} cm`:"—"} / {med.peso?`${med.peso} kg`:"—"}</span></div>
+          <div style={ps.row}><span style={ps.lbl}>IMC</span><span style={{...ps.val,fontWeight:"bold"}}>{bmi?`${bmi} kg/m²`:"—"}{bmiInfo?` — ${bmiInfo.label}`:""}</span></div>
+        </div>
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>2. Antecedentes Pessoais</div>
+        {ANT_SYSTEMS.map(sys=>{
+          const active=sys.items.filter(it=>ant[it.k]);
+          const hasTxt=ant[sys.txtKey];
+          return <div key={sys.id} style={{marginBottom:"5pt",paddingBottom:"5pt",borderBottom:"0.3pt solid #eee"}}>
+            <div style={{fontSize:"7.5pt",fontWeight:"bold",color:active.length>0?"#1a3a6b":"#aaa",marginBottom:"2pt",textTransform:"uppercase",letterSpacing:"0.05em"}}>{sys.label}</div>
+            <div style={{display:"flex",flexWrap:"wrap"}}>
+              {sys.items.map(it=><span key={it.k} style={ps.chk(ant[it.k])}>{ant[it.k]?"☑":"☐"} {it.l}</span>)}
+            </div>
+            {hasTxt&&<div style={{fontSize:"7.5pt",color:"#444",fontStyle:"italic",marginTop:"2pt",paddingLeft:"10pt"}}>↳ {ant[sys.txtKey]}</div>}
+          </div>;
+        })}
+        {ant.txt_outros&&<div style={{fontSize:"8pt",color:"#333",marginTop:"4pt"}}><strong>Outros:</strong> {ant.txt_outros}</div>}
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>3. Cirurgias Anteriores</div>
+        {cirurgias.length>0?<table style={ps.tbl}><thead><tr>
+          <th style={{...ps.th,width:"12%"}}>Data</th><th style={{...ps.th,width:"30%"}}>Descrição</th>
+          <th style={{...ps.th,width:"22%"}}>Técnica</th><th style={{...ps.th,width:"36%"}}>Intercorrências</th>
+        </tr></thead><tbody>
+          {cirurgias.map((c,i)=><tr key={i}><td style={ps.td}>{fmtDate(c.data)}</td><td style={ps.td}>{c.descricao||"—"}</td>
+            <td style={ps.td}>{TECNICA_LABELS[c.tecnica]||c.tecnica||"—"}</td><td style={ps.td}>{c.intercorrencias||"Sem intercorrências"}</td></tr>)}
+        </tbody></table>:<div style={{fontSize:"8pt",color:"#999",fontStyle:"italic"}}>Sem cirurgias anteriores</div>}
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>4. Medicação Habitual e Alergias</div>
+        {meds.some(m=>m.nome)?<table style={{...ps.tbl,marginBottom:"5pt"}}><thead><tr>
+          <th style={{...ps.th,width:"35%"}}>Medicamento</th><th style={{...ps.th,width:"20%"}}>Dose</th>
+          <th style={{...ps.th,width:"25%"}}>Frequência</th><th style={{...ps.th,width:"20%"}}>Via</th>
+        </tr></thead><tbody>
+          {meds.filter(m=>m.nome).map((m,i)=><tr key={i}><td style={ps.td}>{m.nome}</td><td style={ps.td}>{m.dose||"—"}</td><td style={ps.td}>{m.freq||"—"}</td><td style={ps.td}>{m.via||"—"}</td></tr>)}
+        </tbody></table>:<div style={{fontSize:"8pt",color:"#999",fontStyle:"italic",marginBottom:"5pt"}}>Sem medicação registada</div>}
+        {alergias.some(a=>a.substancia)
+          ?<div style={{backgroundColor:"#fff5f5",border:"0.75pt solid #ffbbbb",borderRadius:"3pt",padding:"4pt 8pt",fontSize:"8pt"}}>
+            <strong style={{color:"#cc0000"}}>⚠ ALERGIAS: </strong>
+            {alergias.filter(a=>a.substancia).map((a,i)=><span key={i}>{a.substancia}{a.reacao?` (${a.reacao})`:""}&nbsp;&nbsp;</span>)}
+          </div>
+          :<div style={{fontSize:"8pt",color:"#555"}}>Alergias: <strong>Não conhecidas</strong></div>}
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>5. Exames Auxiliares de Diagnóstico</div>
+        {(ecg.ritmo||ecg.resultado||ecg.fc)&&<div style={{marginBottom:"6pt",padding:"4pt 8pt",background:"#f8faff",border:"0.5pt solid #d0ddf0",borderRadius:"3pt"}}>
+          <div style={{fontSize:"7.5pt",fontWeight:"bold",color:"#555",marginBottom:"2pt"}}>ECG{ecg.data?` — ${fmtDate(ecg.data)}`:""}</div>
+          <div style={{fontSize:"8.5pt"}}>{[RITMO_LABELS[ecg.ritmo]||ecg.ritmo,ecg.fc?`FC ${ecg.fc} bpm`:"",ecg.pr?`PR ${ecg.pr} ms`:"",ecg.qrs?`QRS ${ecg.qrs} ms`:"",ecg.qtc?`QTc ${ecg.qtc} ms`:""].filter(Boolean).join(" · ")}</div>
+          {ecg.resultado&&<div style={{fontSize:"8pt",color:"#444",fontStyle:"italic",marginTop:"2pt"}}>{ecg.resultado}</div>}
+        </div>}
+        {(()=>{const fields=labFields(pid.sexo).filter(lf=>labs[lf.key]);
+          if(!fields.length)return <div style={{fontSize:"8pt",color:"#999",fontStyle:"italic"}}>Sem análises registadas</div>;
+          return <div>
+            <div style={{fontSize:"7.5pt",fontWeight:"bold",color:"#555",marginBottom:"3pt"}}>Análises{labs.data?` — ${fmtDate(labs.data)}`:""}</div>
+            <table style={ps.tbl}><thead><tr>{fields.map(lf=><th key={lf.key} style={ps.th}>{lf.label}{lf.unit?` (${lf.unit})`:""}</th>)}</tr></thead>
+            <tbody><tr>{fields.map(lf=>{const v=parseFloat(labs[lf.key]);const abn=!isNaN(v)&&(v<lf.lo||v>lf.hi);
+              return <td key={lf.key} style={{...ps.td,fontWeight:abn?"bold":"normal",color:abn?"#cc0000":"#1a1a1a",backgroundColor:abn?"#fff0f0":"white",textAlign:"center"}}>
+                {labs[lf.key]}{abn?(v<lf.lo?" ↓":" ↑"):""}</td>;})}</tr>
+            <tr>{fields.map(lf=><td key={lf.key} style={{...ps.td,fontSize:"6.5pt",color:"#aaa",fontStyle:"italic",textAlign:"center",backgroundColor:"#fafafa"}}>Ref: {lf.ref}</td>)}</tr>
+            </tbody></table></div>;})()}
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>6. Avaliação da Via Aérea</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:"4pt 20pt",marginBottom:"5pt"}}>
+          {via.mobilidade&&<span style={{fontSize:"8pt"}}><strong>Mobilidade cervical:</strong> {via.mobilidade==="normal"?"Normal (>35°)":via.mobilidade==="reduzida"?"Reduzida (15–35°)":"Muito reduzida (<15°)"}</span>}
+          {via.abertura&&<span style={{fontSize:"8pt"}}><strong>Abertura boca:</strong> {via.abertura}</span>}
+          {via.mallampati&&<span style={{fontSize:"8pt"}}><strong>Mallampati:</strong> Classe {via.mallampati}</span>}
+          {via.dtm&&<span style={{fontSize:"8pt"}}><strong>DTM:</strong> {via.dtm}</span>}
+          {via.protusao&&<span style={{fontSize:"8pt"}}><strong>Bite test:</strong> Classe {via.protusao}</span>}
+        </div>
+        {via.obs&&<div style={{fontSize:"8pt",fontStyle:"italic",color:"#444",marginBottom:"5pt"}}>Obs: {via.obs}</div>}
+        <div style={{display:"inline-flex",alignItems:"center",gap:"6pt",padding:"3pt 10pt",borderRadius:"3pt",backgroundColor:riskBg(airwayRisk.level),border:`0.75pt solid ${riskBrd(airwayRisk.level)}`}}>
+          <span style={{fontSize:"7pt",fontWeight:"bold",color:"#555"}}>RISCO GLOBAL:</span>
+          <span style={{fontSize:"8.5pt",fontWeight:"bold",color:riskColor(airwayRisk.level)}}>{airwayRisk.level} — {airwayRisk.desc}</span>
+        </div>
+      </div>
+      <div style={ps.sec}>
+        <div style={ps.secT}>7. Índices de Risco Anestésico</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"5pt"}}>
+          {asa&&<div style={{padding:"5pt 7pt",border:"0.5pt solid #ddd",borderRadius:"3pt",borderLeft:"2pt solid #1a3a6b"}}>
+            <div style={{fontSize:"6.5pt",fontWeight:"bold",color:"#777",textTransform:"uppercase",marginBottom:"2pt"}}>ASA</div>
+            <div style={{fontSize:"13pt",fontWeight:"bold"}}>ASA {asa}</div>
+          </div>}
+          {bmi&&<div style={{padding:"5pt 7pt",border:"0.5pt solid #ddd",borderRadius:"3pt",borderLeft:"2pt solid #1a3a6b"}}>
+            <div style={{fontSize:"6.5pt",fontWeight:"bold",color:"#777",textTransform:"uppercase",marginBottom:"2pt"}}>IMC</div>
+            <div style={{fontSize:"12pt",fontWeight:"bold"}}>{bmi}</div>
+            <div style={{fontSize:"7pt",color:"#555"}}>{bmiInfo?.label}</div>
+          </div>}
+          <div style={{padding:"5pt 7pt",border:"0.5pt solid #ddd",borderRadius:"3pt",borderLeft:`2pt solid ${riskBrd(rcri.level)}`}}>
+            <div style={{fontSize:"6.5pt",fontWeight:"bold",color:"#777",textTransform:"uppercase",marginBottom:"2pt"}}>RCRI (Lee)</div>
+            <div style={{fontSize:"13pt",fontWeight:"bold"}}>{rcri.score} <span style={{fontSize:"8pt",fontWeight:"normal"}}>{rcri.pct}</span></div>
+            <div style={{fontSize:"7pt",fontWeight:"bold",color:riskColor(rcri.level)}}>{rcri.level}</div>
+            {rcri.factors.length>0&&<div style={{fontSize:"6pt",color:"#888",marginTop:"2pt"}}>{rcri.factors.join(" · ")}</div>}
+          </div>
+          {apfel&&<div style={{padding:"5pt 7pt",border:"0.5pt solid #ddd",borderRadius:"3pt",borderLeft:`2pt solid ${riskBrd(apfel.level)}`}}>
+            <div style={{fontSize:"6.5pt",fontWeight:"bold",color:"#777",textTransform:"uppercase",marginBottom:"2pt"}}>Apfel (NVPO)</div>
+            <div style={{fontSize:"13pt",fontWeight:"bold"}}>{apfel.score} <span style={{fontSize:"8pt",fontWeight:"normal"}}>{apfel.risk}</span></div>
+            <div style={{fontSize:"7pt",fontWeight:"bold",color:riskColor(apfel.level)}}>{apfel.level}</div>
+          </div>}
+        </div>
+      </div>
+      <div style={{...ps.sec,marginBottom:"16pt"}}>
+        <div style={ps.secT}>8. Plano Anestésico Proposto</div>
+        <div style={{minHeight:"55pt",border:"0.5pt solid #ccc",borderRadius:"3pt",padding:"5pt 8pt",fontSize:"8.5pt",whiteSpace:"pre-wrap"}}>{plano||" "}</div>
+      </div>
+      <div style={{borderTop:"0.5pt solid #ccc",paddingTop:"10pt",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"30pt"}}>
+        <div style={{textAlign:"center"}}><div style={{height:"28pt"}}/><div style={{borderTop:"0.75pt solid #333",paddingTop:"4pt",fontSize:"7pt",color:"#666"}}>Médico Anestesiologista</div></div>
+        <div style={{textAlign:"center"}}><div style={{height:"28pt"}}/><div style={{borderTop:"0.75pt solid #333",paddingTop:"4pt",fontSize:"7pt",color:"#666"}}>Cédula Profissional / Data</div></div>
+      </div>
+      <div style={{marginTop:"8pt",textAlign:"center",fontSize:"6pt",color:"#ccc",borderTop:"0.3pt solid #eee",paddingTop:"5pt"}}>Ficha de Consulta Pré-Anestésica · {today}</div>
+    </div>
+  </div>;
+}
+
+/* ── MAIN APP ── */
+function App(){
+  const [tab,setTab]=useState(0);
+  const [showImport,setShowImport]=useState(false);
+  const [showKeyModal,setShowKeyModal]=useState(!sessionStorage.getItem("anthropic_key"));
+
+  const [pid,setPid]=useState({nome:"",processo:"",dob:"",sexo:""});
+  const [med,setMed]=useState({altura:"",peso:""});
+  const [ant,setAnt]=useState({
+    hta:false,cardiopatia_isq:false,insuf_cardiaca:false,arritmia:false,valvulopatia:false,dap:false,txt_cardiovascular:"",
+    dpoc:false,asma:false,insuf_resp:false,apneia:false,txt_respiratorio:"",
+    avc:false,ait:false,epilepsia:false,demencia:false,parkinson:false,txt_neurologico:"",
+    dm_oral:false,dm_insulina:false,hipotiroidismo:false,hipertiroidismo:false,txt_endocrino:"",
+    insuf_renal:false,dialise:false,insuf_hepatica:false,cirrose:false,txt_renal:"",
+    coagulopatia:false,anticoagulacao:false,anemia_cronica:false,neoplasia:false,quimio:false,txt_hemato:"",txt_outros:"",
   });
-  const [cirurgias, setCirurgias] = useState([]);
-  const [meds, setMeds] = useState([{ id: 1, nome: "", dose: "", freq: "", via: "" }]);
-  const [alergias, setAlergias] = useState([]);
-  const [ecg, setEcg] = useState({ data: "", ritmo: "", fc: "", pr: "", qrs: "", qtc: "", resultado: "" });
-  const [labs, setLabs] = useState({ data: "", hemoglobina: "", plaquetas: "", inr: "", aptt: "", tp: "", creatinina: "", sodio: "", potassio: "", ureia: "", tsh: "", t4livre: "" });
-  const [via, setVia] = useState({ mobilidade: "", abertura: "", mallampati: "", dtm: "", protusao: "", obs: "" });
-  const [asa, setAsa] = useState("");
-  const [tipoCir, setTipoCir] = useState("");
-  const [apfelOpts, setApfelOpts] = useState({ opioides: false, ponv: false, fumador: false });
-  const [plano, setPlano] = useState("");
+  const [cirurgias,setCirurgias]=useState([]);
+  const [meds,setMeds]=useState([{id:1,nome:"",dose:"",freq:"",via:""}]);
+  const [alergias,setAlergias]=useState([]);
+  const [ecg,setEcg]=useState({data:"",ritmo:"",fc:"",pr:"",qrs:"",qtc:"",resultado:""});
+  const [labs,setLabs]=useState({data:"",hemoglobina:"",plaquetas:"",inr:"",aptt:"",tp:"",creatinina:"",sodio:"",potassio:"",ureia:"",tsh:"",t4livre:""});
+  const [via,setVia]=useState({mobilidade:"",abertura:"",mallampati:"",dtm:"",protusao:"",obs:""});
+  const [asa,setAsa]=useState("");
+  const [tipoCir,setTipoCir]=useState("");
+  const [apfelOpts,setApfelOpts]=useState({opioides:false,ponv:false,fumador:false});
+  const [plano,setPlano]=useState("");
 
-  /* Computed */
-  const bmi = useMemo(() => { const h = parseFloat(med.altura) / 100, p = parseFloat(med.peso); return h > 0.5 && p > 0 ? (p / (h * h)).toFixed(1) : null; }, [med]);
-  const bmiInfo = useMemo(() => {
-    if (!bmi) return null;
-    const b = parseFloat(bmi);
-    if (b < 18.5) return { label: "Baixo Peso", color: C.yellow };
-    if (b < 25) return { label: "Peso Normal", color: C.green };
-    if (b < 30) return { label: "Excesso de Peso", color: C.yellow };
-    if (b < 35) return { label: "Obesidade Grau I", color: C.orange };
-    if (b < 40) return { label: "Obesidade Grau II", color: C.red };
-    return { label: "Obesidade Mórbida", color: "#cc0033" };
-  }, [bmi]);
-  const idade = useMemo(() => { if (!pid.dob) return null; return Math.floor((Date.now() - new Date(pid.dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25)); }, [pid.dob]);
+  const bmi=useMemo(()=>{const h=parseFloat(med.altura)/100,p=parseFloat(med.peso);return h>0.5&&p>0?(p/(h*h)).toFixed(1):null;},[med]);
+  const bmiInfo=useMemo(()=>{if(!bmi)return null;const b=parseFloat(bmi);
+    if(b<18.5)return{label:"Baixo Peso",color:C.yellow};if(b<25)return{label:"Peso Normal",color:C.green};
+    if(b<30)return{label:"Excesso de Peso",color:C.yellow};if(b<35)return{label:"Obesidade Grau I",color:C.orange};
+    if(b<40)return{label:"Obesidade Grau II",color:C.red};return{label:"Obesidade Mórbida",color:"#cc0033"};
+  },[bmi]);
+  const idade=useMemo(()=>{if(!pid.dob)return null;return Math.floor((Date.now()-new Date(pid.dob).getTime())/(1000*60*60*24*365.25));},[pid.dob]);
+  const rcri=useMemo(()=>{let s=0;const f=[];
+    if(["intraperitoneal","intratoracica","vascular_sup"].includes(tipoCir)){s++;f.push("Cirurgia de alto risco");}
+    if(ant.cardiopatia_isq){s++;f.push("Cardiopatia isquémica");}if(ant.insuf_cardiaca){s++;f.push("Insuf. cardíaca");}
+    if(ant.avc||ant.ait){s++;f.push("Doença cerebrovascular");}if(ant.dm_insulina){s++;f.push("DM insulino-dependente");}
+    const cr=parseFloat(labs.creatinina);if(!isNaN(cr)&&cr>2.0){s++;f.push(`Creatinina ${cr} mg/dL`);}
+    const tbl=[{pct:"0.4%",level:"Muito Baixo",color:C.green},{pct:"1.0%",level:"Baixo",color:C.green},{pct:"2.4%",level:"Moderado",color:C.yellow},{pct:"5.4%",level:"Elevado",color:C.red}];
+    return{score:s,factors:f,...tbl[Math.min(s,3)]};
+  },[ant,labs.creatinina,tipoCir]);
+  const airwayRisk=useMemo(()=>{let p=0;
+    if(via.mallampati==="III")p+=1;if(via.mallampati==="IV")p+=3;
+    if(via.abertura==="<3cm")p+=2;else if(via.abertura==="3-4cm")p+=1;
+    if(via.mobilidade==="muito_red")p+=2;else if(via.mobilidade==="reduzida")p+=1;
+    if(via.dtm==="<6cm")p+=2;else if(via.dtm==="6-6.5cm")p+=1;
+    if(via.protusao==="C")p+=1;
+    if(p===0)return{level:"Baixo",color:C.green,desc:"Via aérea provavelmente normal"};
+    if(p<=2)return{level:"Moderado",color:C.yellow,desc:"Pré-oxigenação prolongada. Ter plano B preparado"};
+    if(p<=4)return{level:"Elevado",color:C.orange,desc:"Preparar equipamento VAD. Informar equipa"};
+    return{level:"Muito Elevado",color:C.red,desc:"VAD provável — seguir algoritmo DAS/ASA"};
+  },[via]);
+  const apfel=useMemo(()=>{if(!pid.sexo)return null;let s=0;
+    if(pid.sexo==="F")s++;if(!apfelOpts.fumador)s++;if(apfelOpts.ponv)s++;if(apfelOpts.opioides)s++;
+    const r=["10%","21%","39%","61%","79%"],cl=[C.green,C.green,C.yellow,C.orange,C.red],d=["Muito Baixo","Baixo","Moderado","Elevado","Muito Elevado"];
+    return{score:s,risk:r[s],color:cl[s],level:d[s]};
+  },[pid.sexo,apfelOpts]);
 
-  const rcri = useMemo(() => {
-    let s = 0; const f = [];
-    if (["intraperitoneal", "intratoracica", "vascular_sup"].includes(tipoCir)) { s++; f.push("Cirurgia de alto risco"); }
-    if (ant.cardiopatia_isq) { s++; f.push("Cardiopatia isquémica"); }
-    if (ant.insuf_cardiaca) { s++; f.push("Insuf. cardíaca"); }
-    if (ant.avc || ant.ait) { s++; f.push("Doença cerebrovascular"); }
-    if (ant.dm_insulina) { s++; f.push("DM insulino-dependente"); }
-    const cr = parseFloat(labs.creatinina); if (!isNaN(cr) && cr > 2.0) { s++; f.push(`Creatinina ${cr} mg/dL`); }
-    const tbl = [{ pct: "0.4%", level: "Muito Baixo", color: C.green }, { pct: "1.0%", level: "Baixo", color: C.green }, { pct: "2.4%", level: "Moderado", color: C.yellow }, { pct: "5.4%", level: "Elevado", color: C.red }];
-    return { score: s, factors: f, ...tbl[Math.min(s, 3)] };
-  }, [ant, labs.creatinina, tipoCir]);
+  const addRow=(set,tpl)=>set(p=>[...p,{id:Date.now(),...tpl}]);
+  const delRow=(set,id)=>set(p=>p.filter(r=>r.id!==id));
+  const updRow=(set,id,k,v)=>set(p=>p.map(r=>r.id===id?{...r,[k]:v}:r));
 
-  const airwayRisk = useMemo(() => {
-    let p = 0;
-    if (via.mallampati === "III") p += 1; if (via.mallampati === "IV") p += 3;
-    if (via.abertura === "<3cm") p += 2; else if (via.abertura === "3-4cm") p += 1;
-    if (via.mobilidade === "muito_red") p += 2; else if (via.mobilidade === "reduzida") p += 1;
-    if (via.dtm === "<6cm") p += 2; else if (via.dtm === "6-6.5cm") p += 1;
-    if (via.protusao === "C") p += 1;
-    if (p === 0) return { level: "Baixo", color: C.green, desc: "Via aérea provavelmente normal" };
-    if (p <= 2) return { level: "Moderado", color: C.yellow, desc: "Pré-oxigenação prolongada. Ter plano B preparado" };
-    if (p <= 4) return { level: "Elevado", color: C.orange, desc: "Preparar equipamento VAD. Informar equipa" };
-    return { level: "Muito Elevado", color: C.red, desc: "VAD provável — seguir algoritmo DAS/ASA" };
-  }, [via]);
-
-  const apfel = useMemo(() => {
-    if (!pid.sexo) return null;
-    let s = 0;
-    if (pid.sexo === "F") s++; if (!apfelOpts.fumador) s++; if (apfelOpts.ponv) s++; if (apfelOpts.opioides) s++;
-    const r = ["10%", "21%", "39%", "61%", "79%"], cl = [C.green, C.green, C.yellow, C.orange, C.red], d = ["Muito Baixo", "Baixo", "Moderado", "Elevado", "Muito Elevado"];
-    return { score: s, risk: r[s], color: cl[s], level: d[s] };
-  }, [pid.sexo, apfelOpts]);
-
-  /* Row helpers */
-  const addRow = (set, tpl) => set(p => [...p, { id: Date.now(), ...tpl }]);
-  const delRow = (set, id) => set(p => p.filter(r => r.id !== id));
-  const updRow = (set, id, k, v) => set(p => p.map(r => r.id === id ? { ...r, [k]: v } : r));
-
-  /* Import handler */
-  const handleImport = useCallback((data) => {
-    const clean = (obj) => Object.fromEntries(Object.entries(obj || {}).filter(([, v]) => v != null && v !== ""));
-    if (data.pid) setPid(p => ({ ...p, ...clean(data.pid) }));
-    if (data.med) setMed(p => ({ ...p, ...clean(data.med) }));
-    if (data.ant) setAnt(p => ({ ...p, ...data.ant }));
-    if (data.cirurgias?.length) setCirurgias(data.cirurgias.map((c, i) => ({ id: i + 1, ...c })));
-    if (data.meds?.length) setMeds(data.meds.map((m, i) => ({ id: i + 1, ...m })));
-    if (data.alergias?.length) setAlergias(data.alergias.map((a, i) => ({ id: i + 1, ...a })));
-    if (data.ecg) setEcg(p => ({ ...p, ...clean(data.ecg) }));
-    if (data.labs) setLabs(p => ({ ...p, ...clean(data.labs) }));
-    if (data.via) setVia(p => ({ ...p, ...clean(data.via) }));
+  const handleImport=useCallback((data)=>{
+    const clean=(obj)=>Object.fromEntries(Object.entries(obj||{}).filter(([,v])=>v!=null&&v!==""));
+    if(data.pid)setPid(p=>({...p,...clean(data.pid)}));
+    if(data.med)setMed(p=>({...p,...clean(data.med)}));
+    if(data.ant)setAnt(p=>({...p,...data.ant}));
+    if(data.cirurgias?.length)setCirurgias(data.cirurgias.map((c,i)=>({id:i+1,...c})));
+    if(data.meds?.length)setMeds(data.meds.map((m,i)=>({id:i+1,...m})));
+    if(data.alergias?.length)setAlergias(data.alergias.map((a,i)=>({id:i+1,...a})));
+    if(data.ecg)setEcg(p=>({...p,...clean(data.ecg)}));
+    if(data.labs)setLabs(p=>({...p,...clean(data.labs)}));
+    if(data.via)setVia(p=>({...p,...clean(data.via)}));
     setTab(0);
-  }, []);
+  },[]);
 
-  const TABS = ["Identificação", "Antecedentes", "Cirurgias", "Medicação & Alergias", "Exames", "Via Aérea", "Índices de Risco"];
+  const TABS=["Identificação","Antecedentes","Cirurgias","Medicação & Alergias","Exames","Via Aérea","Índices de Risco"];
+  const tecnicaOpts=[{v:"AG",l:"Anestesia Geral"},{v:"AG_IOT",l:"AG com IOT"},{v:"AG_ML",l:"AG com Máscara Laríngea"},
+    {v:"raqui",l:"Raquianestesia"},{v:"epidural",l:"Epidural"},{v:"plexo",l:"Bloqueio de Plexo"},
+    {v:"local",l:"Anestesia Local"},{v:"sedacao",l:"Sedação/MAC"},{v:"outra",l:"Outra"}];
 
-  const tecnicaOpts = [
-    { v: "AG", l: "Anestesia Geral" }, { v: "AG_IOT", l: "AG com IOT" }, { v: "AG_ML", l: "AG com Máscara Laríngea" },
-    { v: "raqui", l: "Raquianestesia" }, { v: "epidural", l: "Epidural" }, { v: "plexo", l: "Bloqueio de Plexo" },
-    { v: "local", l: "Anestesia Local" }, { v: "sedacao", l: "Sedação/MAC" }, { v: "outra", l: "Outra" },
+  const sections=[
+    /* 0 — Identificação */
+    <div key={0} style={{display:"flex",flexDirection:"column",gap:20}}>
+      <div style={cardSt}>
+        <div style={secTitSt}>Dados do Doente</div>
+        <Grid cols={2} gap={16}>
+          <Field label="Nome Completo" col={2}><Inp value={pid.nome} onChange={v=>setPid(p=>({...p,nome:v}))} placeholder="Nome completo"/></Field>
+          <Field label="Número de Processo"><Inp value={pid.processo} onChange={v=>setPid(p=>({...p,processo:v}))} placeholder="Ex: 123456"/></Field>
+          <Field label="Sexo"><Sel value={pid.sexo} onChange={v=>setPid(p=>({...p,sexo:v}))} options={[{v:"M",l:"Masculino"},{v:"F",l:"Feminino"}]}/></Field>
+          <Field label="Data de Nascimento"><Inp type="date" value={pid.dob} onChange={v=>setPid(p=>({...p,dob:v}))}/></Field>
+          <Field label="Idade"><div style={{...inputSt,color:idade?C.textBright:C.textDim,fontFamily:C.mono,display:"flex",alignItems:"center"}}>{idade?`${idade} anos`:"—"}</div></Field>
+        </Grid>
+      </div>
+      <div style={cardSt}>
+        <div style={secTitSt}>Antropometria</div>
+        <Grid cols={3} gap={16}>
+          <Field label="Altura (cm)"><Inp type="number" value={med.altura} onChange={v=>setMed(p=>({...p,altura:v}))} placeholder="170"/></Field>
+          <Field label="Peso (kg)"><Inp type="number" value={med.peso} onChange={v=>setMed(p=>({...p,peso:v}))} placeholder="70"/></Field>
+          <Field label="IMC (kg/m²)">
+            <div style={{...inputSt,fontFamily:C.mono,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <span style={{color:bmiInfo?bmiInfo.color:C.textDim,fontWeight:700,fontSize:16}}>{bmi||"—"}</span>
+              {bmiInfo&&<Badge label={bmiInfo.label} color={bmiInfo.color}/>}
+            </div>
+          </Field>
+        </Grid>
+      </div>
+    </div>,
+    /* 1 — Antecedentes */
+    <div key={1} style={{display:"flex",flexDirection:"column",gap:14}}>
+      {ANT_SYSTEMS.map(sys=><AntSystem key={sys.id} sys={sys} ant={ant} setAnt={setAnt}/>)}
+      <div style={cardSt}><div style={secTitSt}>Outros Antecedentes</div>
+        <Txt value={ant.txt_outros} onChange={v=>setAnt(p=>({...p,txt_outros:v}))} rows={3} placeholder="Outros antecedentes não categorizados acima..."/>
+      </div>
+    </div>,
+    /* 2 — Cirurgias */
+    <div key={2} style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={cardSt}>
+        <div style={{...secTitSt,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span>Cirurgias Anteriores</span><Btn small onClick={()=>addRow(setCirurgias,{descricao:"",tecnica:"",data:"",intercorrencias:""})}>+ Adicionar</Btn>
+        </div>
+        {cirurgias.length===0&&<div style={{textAlign:"center",color:C.textDim,padding:"20px 0",fontSize:13,fontStyle:"italic"}}>Sem cirurgias registadas</div>}
+        {cirurgias.map((c,i)=><div key={c.id} style={{...cardSt,background:C.surface,marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <span style={{fontFamily:C.head,fontSize:11,color:C.textDim,fontWeight:700,textTransform:"uppercase"}}>Cirurgia #{i+1}</span>
+            <Btn small variant="danger" onClick={()=>delRow(setCirurgias,c.id)}>Remover</Btn>
+          </div>
+          <Grid cols={2} gap={12}>
+            <Field label="Descrição" col={2}><Inp value={c.descricao} onChange={v=>updRow(setCirurgias,c.id,"descricao",v)} placeholder="Ex: Colecistectomia laparoscópica"/></Field>
+            <Field label="Técnica Anestésica"><Sel value={c.tecnica} onChange={v=>updRow(setCirurgias,c.id,"tecnica",v)} options={tecnicaOpts}/></Field>
+            <Field label="Data"><Inp type="date" value={c.data} onChange={v=>updRow(setCirurgias,c.id,"data",v)}/></Field>
+            <Field label="Intercorrências" col={2}><Txt value={c.intercorrencias} onChange={v=>updRow(setCirurgias,c.id,"intercorrencias",v)} rows={2} placeholder="Ex: Intubação difícil, broncospasmo... (vazio se sem intercorrências)"/></Field>
+          </Grid>
+        </div>)}
+      </div>
+    </div>,
+    /* 3 — Medicação */
+    <div key={3} style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={cardSt}>
+        <div style={{...secTitSt,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span>Medicação Habitual</span><Btn small onClick={()=>addRow(setMeds,{nome:"",dose:"",freq:"",via:""})}>+ Adicionar</Btn>
+        </div>
+        {meds.map(m=><div key={m.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr auto",gap:10,marginBottom:10,alignItems:"end"}}>
+          <div><Lbl>Medicamento</Lbl><Inp value={m.nome} onChange={v=>updRow(setMeds,m.id,"nome",v)} placeholder="Nome do fármaco"/></div>
+          <div><Lbl>Dose</Lbl><Inp value={m.dose} onChange={v=>updRow(setMeds,m.id,"dose",v)} placeholder="10mg"/></div>
+          <div><Lbl>Freq.</Lbl><Inp value={m.freq} onChange={v=>updRow(setMeds,m.id,"freq",v)} placeholder="2×/dia"/></div>
+          <div><Lbl>Via</Lbl><Sel value={m.via} onChange={v=>updRow(setMeds,m.id,"via",v)} options={[{v:"oral",l:"Oral"},{v:"sc",l:"SC"},{v:"iv",l:"IV"},{v:"inal",l:"Inalatória"},{v:"outra",l:"Outra"}]}/></div>
+          <div style={{paddingBottom:1}}><Btn small variant="danger" onClick={()=>delRow(setMeds,m.id)}>✕</Btn></div>
+        </div>)}
+      </div>
+      <div style={cardSt}>
+        <div style={{...secTitSt,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span>Alergias Medicamentosas</span><Btn small onClick={()=>addRow(setAlergias,{substancia:"",reacao:""})}>+ Adicionar</Btn>
+        </div>
+        {alergias.length===0&&<div style={{color:C.textDim,fontSize:13,fontStyle:"italic"}}>Nenhuma alergia registada</div>}
+        {alergias.map(a=><div key={a.id} style={{display:"grid",gridTemplateColumns:"1fr 2fr auto",gap:10,marginBottom:10,alignItems:"end"}}>
+          <div><Lbl>Substância</Lbl><Inp value={a.substancia} onChange={v=>updRow(setAlergias,a.id,"substancia",v)} placeholder="Ex: Penicilina"/></div>
+          <div><Lbl>Reação</Lbl><Inp value={a.reacao} onChange={v=>updRow(setAlergias,a.id,"reacao",v)} placeholder="Ex: Anafilaxia, urticária..."/></div>
+          <div style={{paddingBottom:1}}><Btn small variant="danger" onClick={()=>delRow(setAlergias,a.id)}>✕</Btn></div>
+        </div>)}
+      </div>
+    </div>,
+    /* 4 — Exames */
+    <div key={4} style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={cardSt}>
+        <div style={secTitSt}>Eletrocardiograma</div>
+        <Grid cols={3} gap={14}>
+          <Field label="Data"><Inp type="date" value={ecg.data} onChange={v=>setEcg(p=>({...p,data:v}))}/></Field>
+          <Field label="Ritmo"><Sel value={ecg.ritmo} onChange={v=>setEcg(p=>({...p,ritmo:v}))}
+            options={[{v:"sinusal",l:"Sinusal"},{v:"fa",l:"Fibrilhação auricular"},{v:"flutter",l:"Flutter auricular"},{v:"bav1",l:"BAV 1º grau"},{v:"bav2",l:"BAV 2º grau"},{v:"bav3",l:"BAV 3º grau"},{v:"bbce",l:"BBCE"},{v:"bbcd",l:"BBCD"},{v:"outro",l:"Outro"}]}/></Field>
+          <Field label="FC (bpm)"><Inp type="number" value={ecg.fc} onChange={v=>setEcg(p=>({...p,fc:v}))} placeholder="72"/></Field>
+          <Field label="PR (ms)"><Inp type="number" value={ecg.pr} onChange={v=>setEcg(p=>({...p,pr:v}))} placeholder="120–200"/></Field>
+          <Field label="QRS (ms)"><Inp type="number" value={ecg.qrs} onChange={v=>setEcg(p=>({...p,qrs:v}))} placeholder="<120"/></Field>
+          <Field label="QTc (ms)"><Inp type="number" value={ecg.qtc} onChange={v=>setEcg(p=>({...p,qtc:v}))} placeholder="<440"/></Field>
+          <Field label="Resultado / Interpretação" col={3}><Txt value={ecg.resultado} onChange={v=>setEcg(p=>({...p,resultado:v}))} rows={2} placeholder="Ex: Ritmo sinusal regular sem alterações da repolarização"/></Field>
+        </Grid>
+      </div>
+      <div style={cardSt}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
+          <span style={{fontFamily:C.head,fontSize:13,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:"0.12em"}}>Análises Laboratoriais</span>
+          <div><Lbl>Data</Lbl><Inp type="date" value={labs.data} onChange={v=>setLabs(p=>({...p,data:v}))} style={{width:150}}/></div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:14}}>
+          {labFields(pid.sexo).map(lf=>{const col=labColor(labs[lf.key],lf.lo,lf.hi);const hasVal=labs[lf.key]!=="";
+            return <div key={lf.key}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                <Lbl>{lf.label}</Lbl>{lf.unit&&<span style={{fontSize:9,color:C.textDim,fontFamily:C.mono}}>{lf.unit}</span>}
+              </div>
+              <div style={{position:"relative"}}>
+                <Inp type="number" value={labs[lf.key]} onChange={v=>setLabs(p=>({...p,[lf.key]:v}))} placeholder={lf.ref}
+                  style={{color:hasVal?col:C.textDim,fontFamily:C.mono,fontWeight:hasVal?700:400,borderColor:hasVal&&col!==C.green?col:C.border}}/>
+                {hasVal&&col!==C.green&&<span style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",fontSize:10,color:col,fontWeight:700}}>{parseFloat(labs[lf.key])<lf.lo?"↓":"↑"}</span>}
+              </div>
+              <div style={{fontSize:9,color:C.textDim,marginTop:3,fontFamily:C.mono}}>Ref: {lf.ref}</div>
+            </div>;
+          })}
+        </div>
+      </div>
+    </div>,
+    /* 5 — Via Aérea */
+    <div key={5} style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={cardSt}>
+        <div style={secTitSt}>Avaliação da Via Aérea</div>
+        <Grid cols={2} gap={16}>
+          <Field label="Mobilidade Cervical"><Sel value={via.mobilidade} onChange={v=>setVia(p=>({...p,mobilidade:v}))} options={[{v:"normal",l:"Normal (>35°)"},{v:"reduzida",l:"Reduzida (15–35°)"},{v:"muito_red",l:"Muito reduzida (<15°)"}]}/></Field>
+          <Field label="Abertura de Boca"><Sel value={via.abertura} onChange={v=>setVia(p=>({...p,abertura:v}))} options={[{v:">4cm",l:">4 cm (normal)"},{v:"3-4cm",l:"3–4 cm (ligeiramente reduzida)"},{v:"<3cm",l:"<3 cm (significativamente reduzida)"}]}/></Field>
+          <Field label="Distância Tiromentoniana"><Sel value={via.dtm} onChange={v=>setVia(p=>({...p,dtm:v}))} options={[{v:">6.5cm",l:">6.5 cm (normal)"},{v:"6-6.5cm",l:"6–6.5 cm (borderline)"},{v:"<6cm",l:"<6 cm (reduzida)"}]}/></Field>
+          <Field label="Protusão Mandibular"><Sel value={via.protusao} onChange={v=>setVia(p=>({...p,protusao:v}))} options={[{v:"A",l:"Classe A — inferiores ultrapassam superiores"},{v:"B",l:"Classe B — incisivos nivelam"},{v:"C",l:"Classe C — impossível ultrapassar"}]}/></Field>
+        </Grid>
+      </div>
+      <div style={cardSt}>
+        <div style={secTitSt}>Classificação de Mallampati</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+          {[{v:"I",desc:"Palato mole, úvula, pilares e amígdalas visíveis",detail:"Fácil"},{v:"II",desc:"Palato mole e úvula visíveis",detail:"Moderado"},{v:"III",desc:"Apenas base da úvula visível",detail:"Difícil"},{v:"IV",desc:"Palato mole não visível",detail:"Muito Difícil"}].map(m=>{
+            const sel=via.mallampati===m.v;
+            const mc=m.v==="I"?C.green:m.v==="II"?C.yellow:m.v==="III"?C.orange:C.red;
+            return <div key={m.v} onClick={()=>setVia(p=>({...p,mallampati:m.v}))}
+              style={{...cardSt,cursor:"pointer",textAlign:"center",borderColor:sel?mc:C.border,background:sel?`${mc}18`:C.surface,transition:"all .2s"}}>
+              <div style={{fontFamily:C.mono,fontSize:28,fontWeight:700,color:sel?mc:C.textDim,marginBottom:5}}>{m.v}</div>
+              <div style={{fontSize:10,fontFamily:C.head,fontWeight:700,color:mc,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5}}>{m.detail}</div>
+              <div style={{fontSize:11,color:C.text,lineHeight:1.4}}>{m.desc}</div>
+            </div>;
+          })}
+        </div>
+      </div>
+      <div style={cardSt}><div style={secTitSt}>Observações</div>
+        <Txt value={via.obs} onChange={v=>setVia(p=>({...p,obs:v}))} rows={3} placeholder="Dentes móveis, próteses, microstomia, cicatrizes cervicais, stridor..."/>
+      </div>
+    </div>,
+    /* 6 — Índices de Risco */
+    <div key={6} style={{display:"flex",flexDirection:"column",gap:20}}>
+      <div style={cardSt}>
+        <div style={secTitSt}>Parâmetros para Cálculo</div>
+        <Grid cols={3} gap={16}>
+          <Field label="Classificação ASA"><Sel value={asa} onChange={setAsa} options={[{v:"I",l:"ASA I — Saudável"},{v:"II",l:"ASA II — Ligeira"},{v:"III",l:"ASA III — Grave"},{v:"IV",l:"ASA IV — Risco de vida"},{v:"V",l:"ASA V — Moribundo"},{v:"E",l:"ASA E — Emergência"}]}/></Field>
+          <Field label="Tipo de Cirurgia"><Sel value={tipoCir} onChange={setTipoCir} options={[{v:"superficial",l:"Superficial / endoscópica"},{v:"ortopedica_minor",l:"Ortopédica minor"},{v:"ortopedica_major",l:"Ortopédica major"},{v:"intraperitoneal",l:"Intraperitoneal"},{v:"intratoracica",l:"Intratorácica"},{v:"vascular_sup",l:"Vascular suprainguinal"},{v:"vascular_inf",l:"Vascular infrainguinal"},{v:"neurocirurgia",l:"Neurocirurgia"},{v:"outro",l:"Outro"}]}/></Field>
+          <Field label="Opções (Apfel)">
+            <div style={{display:"flex",flexDirection:"column",gap:8,paddingTop:4}}>
+              <Checkbox label="Fumador activo" checked={apfelOpts.fumador} onChange={v=>setApfelOpts(p=>({...p,fumador:v}))}/>
+              <Checkbox label="NVPO prévia / cinetose" checked={apfelOpts.ponv} onChange={v=>setApfelOpts(p=>({...p,ponv:v}))}/>
+              <Checkbox label="Opioides pós-op previstos" checked={apfelOpts.opioides} onChange={v=>setApfelOpts(p=>({...p,opioides:v}))}/>
+            </div>
+          </Field>
+        </Grid>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(255px,1fr))",gap:14}}>
+        {bmiInfo&&<RiskCard title="Índice de Massa Corporal" score={bmi} level={bmiInfo.label} color={bmiInfo.color} desc={`Altura: ${med.altura} cm — Peso: ${med.peso} kg`}/>}
+        {asa&&<RiskCard title="Classificação ASA" level={`ASA ${asa}`} color={asa==="I"?C.green:asa==="II"?C.yellow:asa==="III"?C.orange:C.red} desc={asa==="I"?"Doente saudável":asa==="II"?"Doença sistémica ligeira":asa==="III"?"Doença sistémica grave":asa==="IV"?"Risco de vida constante":asa==="V"?"Moribundo":"Emergência"}/>}
+        <RiskCard title="RCRI — Risco Cardíaco (Lee)" score={rcri.score} pct={rcri.pct} level={rcri.level} color={rcri.color} factors={rcri.factors} desc={rcri.score===0?"Risco cardíaco perioperatório muito baixo":undefined}/>
+        <RiskCard title="Risco de Via Aérea Difícil" level={airwayRisk.level} color={airwayRisk.color} desc={airwayRisk.desc} factors={[via.mallampati?`Mallampati ${via.mallampati}`:null,via.abertura?`Abertura: ${via.abertura}`:null,via.mobilidade?`Cervical: ${via.mobilidade.replace("_"," ")}`:null,via.dtm?`DTM: ${via.dtm}`:null].filter(Boolean)}/>
+        {apfel&&<RiskCard title="Score de Apfel (NVPO)" score={apfel.score} pct={apfel.risk} level={apfel.level} color={apfel.color} factors={[pid.sexo==="F"?"Sexo feminino":null,!apfelOpts.fumador?"Não fumador":null,apfelOpts.ponv?"NVPO prévia":null,apfelOpts.opioides?"Opioides previstos":null].filter(Boolean)}/>}
+      </div>
+      <div style={cardSt}><div style={secTitSt}>Plano Anestésico</div>
+        <Txt value={plano} onChange={setPlano} rows={4} placeholder="Técnica proposta, monitorização, acessos, estratégia via aérea, profilaxia NVPO, analgesia pós-op..."/>
+      </div>
+    </div>,
   ];
 
-  const sections = [
-    /* 0 — Identificação */
-    <div key={0} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Dados do Doente</div>
-        <Grid cols={2} gap={16}>
-          <Field label="Nome Completo" col={2}><Inp value={pid.nome} onChange={v => setPid(p => ({ ...p, nome: v }))} placeholder="Nome completo" /></Field>
-          <Field label="Número de Processo"><Inp value={pid.processo} onChange={v => setPid(p => ({ ...p, processo: v }))} placeholder="Ex: 123456" /></Field>
-          <Field label="Sexo"><Sel value={pid.sexo} onChange={v => setPid(p => ({ ...p, sexo: v }))} options={[{ v: "M", l: "Masculino" }, { v: "F", l: "Feminino" }]} /></Field>
-          <Field label="Data de Nascimento"><Inp type="date" value={pid.dob} onChange={v => setPid(p => ({ ...p, dob: v }))} /></Field>
-          <Field label="Idade"><div style={{ ...inputSt, color: idade ? C.textBright : C.textDim, fontFamily: C.mono, display: "flex", alignItems: "center" }}>{idade ? `${idade} anos` : "—"}</div></Field>
-        </Grid>
-      </div>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Antropometria</div>
-        <Grid cols={3} gap={16}>
-          <Field label="Altura (cm)"><Inp type="number" value={med.altura} onChange={v => setMed(p => ({ ...p, altura: v }))} placeholder="170" /></Field>
-          <Field label="Peso (kg)"><Inp type="number" value={med.peso} onChange={v => setMed(p => ({ ...p, peso: v }))} placeholder="70" /></Field>
-          <Field label="IMC (kg/m²)">
-            <div style={{ ...inputSt, fontFamily: C.mono, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ color: bmiInfo ? bmiInfo.color : C.textDim, fontWeight: 700, fontSize: 16 }}>{bmi || "—"}</span>
-              {bmiInfo && <Badge label={bmiInfo.label} color={bmiInfo.color} />}
-            </div>
-          </Field>
-        </Grid>
-      </div>
-    </div>,
+  return <>
+    {showKeyModal&&<ApiKeyModal onSave={()=>setShowKeyModal(false)} onClose={sessionStorage.getItem("anthropic_key")?()=>setShowKeyModal(false):null}/>}
 
-    /* 1 — Antecedentes (new: by system) */
-    <div key={1} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {ANT_SYSTEMS.map(sys => <AntSystem key={sys.id} sys={sys} ant={ant} setAnt={setAnt} />)}
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Outros Antecedentes</div>
-        <Txt value={ant.txt_outros} onChange={v => setAnt(p => ({ ...p, txt_outros: v }))}
-          rows={3} placeholder="Outros antecedentes relevantes não categorizados acima..." />
-      </div>
-    </div>,
-
-    /* 2 — Cirurgias */
-    <div key={2} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={cardSt}>
-        <div style={{ ...sectionTitleSt, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>Cirurgias Anteriores</span>
-          <Btn small onClick={() => addRow(setCirurgias, { descricao: "", tecnica: "", data: "", intercorrencias: "" })}>+ Adicionar</Btn>
-        </div>
-        {cirurgias.length === 0 && <div style={{ textAlign: "center", color: C.textDim, padding: "20px 0", fontSize: 13, fontStyle: "italic" }}>Sem cirurgias registadas</div>}
-        {cirurgias.map((c, i) => (
-          <div key={c.id} style={{ ...cardSt, background: C.surface, marginBottom: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <span style={{ fontFamily: C.head, fontSize: 11, color: C.textDim, fontWeight: 700, textTransform: "uppercase" }}>Cirurgia #{i + 1}</span>
-              <Btn small variant="danger" onClick={() => delRow(setCirurgias, c.id)}>Remover</Btn>
-            </div>
-            <Grid cols={2} gap={12}>
-              <Field label="Descrição" col={2}><Inp value={c.descricao} onChange={v => updRow(setCirurgias, c.id, "descricao", v)} placeholder="Ex: Colecistectomia laparoscópica" /></Field>
-              <Field label="Técnica Anestésica"><Sel value={c.tecnica} onChange={v => updRow(setCirurgias, c.id, "tecnica", v)} options={tecnicaOpts} /></Field>
-              <Field label="Data"><Inp type="date" value={c.data} onChange={v => updRow(setCirurgias, c.id, "data", v)} /></Field>
-              <Field label="Intercorrências Anestésicas" col={2}><Txt value={c.intercorrencias} onChange={v => updRow(setCirurgias, c.id, "intercorrencias", v)} rows={2} placeholder="Ex: Intubação difícil, broncospasmo, NVPO... (vazio se sem intercorrências)" /></Field>
-            </Grid>
+    <div className="no-print" style={{minHeight:"100vh",background:C.bg}}>
+      {/* Header */}
+      <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"12px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:100}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:36,height:36,borderRadius:10,background:`${C.accent}20`,border:`1px solid ${C.accent}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>⚕</div>
+          <div>
+            <div style={{fontFamily:C.head,fontSize:14,fontWeight:800,color:C.textBright,letterSpacing:"0.04em"}}>CONSULTA PRÉ-ANESTÉSICA</div>
+            <div style={{fontSize:11,color:C.textDim}}>Registo Clínico Assistido por IA</div>
           </div>
-        ))}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {pid.nome&&<div style={{textAlign:"right",marginRight:6}}>
+            <div style={{fontFamily:C.head,fontSize:13,color:C.textBright,fontWeight:700}}>{pid.nome}</div>
+            <div style={{fontSize:11,color:C.textDim,fontFamily:C.mono}}>{pid.processo&&`Proc. ${pid.processo}`}{idade?` · ${idade} anos`:""}{pid.sexo?` · ${pid.sexo}`:""}</div>
+          </div>}
+          <button onClick={()=>setShowKeyModal(true)} title="Configurar API Key"
+            style={{background:`${C.yellow}15`,border:`1px solid ${C.yellow}40`,borderRadius:8,color:C.yellow,cursor:"pointer",padding:"7px 12px",fontFamily:C.head,fontSize:11,fontWeight:700,letterSpacing:"0.06em",display:"flex",alignItems:"center",gap:5}}>
+            🔑 API Key
+          </button>
+          <button onClick={()=>setShowImport(v=>!v)}
+            style={{background:showImport?`${C.purple}30`:`${C.purple}15`,border:`1px solid ${C.purple}40`,borderRadius:8,color:C.purple,cursor:"pointer",padding:"7px 12px",fontFamily:C.head,fontSize:11,fontWeight:700,letterSpacing:"0.06em",display:"flex",alignItems:"center",gap:5}}>
+            🤖 Importar
+          </button>
+          <button onClick={()=>window.print()}
+            style={{background:`${C.green}15`,border:`1px solid ${C.green}40`,borderRadius:8,color:C.green,cursor:"pointer",padding:"7px 12px",fontFamily:C.head,fontSize:11,fontWeight:700,letterSpacing:"0.06em",display:"flex",alignItems:"center",gap:5}}>
+            📄 PDF
+          </button>
+        </div>
       </div>
-    </div>,
+      {/* Tabs */}
+      <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,overflowX:"auto"}}>
+        <div style={{display:"flex",padding:"0 20px",minWidth:"fit-content"}}>
+          {TABS.map((t,i)=>{const active=tab===i;return(
+            <button key={i} onClick={()=>setTab(i)} style={{background:"none",border:"none",cursor:"pointer",padding:"14px 17px",fontFamily:C.head,fontSize:12,fontWeight:active?700:500,color:active?C.accent:C.textDim,letterSpacing:"0.06em",textTransform:"uppercase",whiteSpace:"nowrap",borderBottom:active?`2px solid ${C.accent}`:"2px solid transparent",transition:"color .2s"}}>{t}</button>
+          );})}
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{maxWidth:900,margin:"0 auto",padding:"26px 20px 60px"}}>
+        {showImport&&<ImportPanel onImport={handleImport}/>}
+        {sections[tab]}
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:26}}>
+          {tab>0?<Btn variant="ghost" onClick={()=>setTab(t=>t-1)}>← Anterior</Btn>:<div/>}
+          {tab<TABS.length-1?<Btn onClick={()=>setTab(t=>t+1)}>Seguinte →</Btn>:<Btn onClick={()=>window.print()}>📄 Exportar PDF</Btn>}
+        </div>
+      </div>
+    </div>
 
-    /* 3 — Medicação & Alergias */
-    <div key={3} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={cardSt}>
-        <div style={{ ...sectionTitleSt, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>Medicação Habitual</span>
-          <Btn small onClick={() => addRow(setMeds, { nome: "", dose: "", freq: "", via: "" })}>+ Adicionar</Btn>
-        </div>
-        {meds.map(m => (
-          <div key={m.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr auto", gap: 10, marginBottom: 10, alignItems: "end" }}>
-            <div><Lbl>Medicamento</Lbl><Inp value={m.nome} onChange={v => updRow(setMeds, m.id, "nome", v)} placeholder="Nome do fármaco" /></div>
-            <div><Lbl>Dose</Lbl><Inp value={m.dose} onChange={v => updRow(setMeds, m.id, "dose", v)} placeholder="10mg" /></div>
-            <div><Lbl>Frequência</Lbl><Inp value={m.freq} onChange={v => updRow(setMeds, m.id, "freq", v)} placeholder="2×/dia" /></div>
-            <div><Lbl>Via</Lbl><Sel value={m.via} onChange={v => updRow(setMeds, m.id, "via", v)} options={[{ v: "oral", l: "Oral" }, { v: "sc", l: "SC" }, { v: "iv", l: "IV" }, { v: "inal", l: "Inalatória" }, { v: "outra", l: "Outra" }]} /></div>
-            <div style={{ paddingBottom: 1 }}><Btn small variant="danger" onClick={() => delRow(setMeds, m.id)}>✕</Btn></div>
-          </div>
-        ))}
-      </div>
-      <div style={cardSt}>
-        <div style={{ ...sectionTitleSt, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>Alergias Medicamentosas</span>
-          <Btn small onClick={() => addRow(setAlergias, { substancia: "", reacao: "" })}>+ Adicionar</Btn>
-        </div>
-        {alergias.length === 0 && <div style={{ color: C.textDim, fontSize: 13, fontStyle: "italic" }}>Nenhuma alergia registada</div>}
-        {alergias.map(a => (
-          <div key={a.id} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 10, marginBottom: 10, alignItems: "end" }}>
-            <div><Lbl>Substância</Lbl><Inp value={a.substancia} onChange={v => updRow(setAlergias, a.id, "substancia", v)} placeholder="Ex: Penicilina" /></div>
-            <div><Lbl>Reação</Lbl><Inp value={a.reacao} onChange={v => updRow(setAlergias, a.id, "reacao", v)} placeholder="Ex: Anafilaxia, urticária..." /></div>
-            <div style={{ paddingBottom: 1 }}><Btn small variant="danger" onClick={() => delRow(setAlergias, a.id)}>✕</Btn></div>
-          </div>
-        ))}
-      </div>
-    </div>,
+    <PrintReport pid={pid} idade={idade} bmi={bmi} bmiInfo={bmiInfo} med={med}
+      ant={ant} cirurgias={cirurgias} meds={meds} alergias={alergias}
+      ecg={ecg} labs={labs} via={via}
+      asa={asa} rcri={rcri} airwayRisk={airwayRisk} apfel={apfel} plano={plano}/>
+  </>;
+}
 
-    /* 4 — Exames */
-    <div key={4} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Eletrocardiograma</div>
-        <Grid cols={3} gap={14}>
-          <Field label="Data"><Inp type="date" value={ecg.data} onChange={v => setEcg(p => ({ ...p, data: v }))} /></Field>
-          <Field label="Ritmo">
-            <Sel value={ecg.ritmo} onChange={v => setEcg(p => ({ ...p, ritmo: v }))}
-              options={[{ v: "sinusal", l: "Sinusal" }, { v: "fa", l: "Fibrilhação auricular" }, { v: "flutter", l: "Flutter auricular" }, { v: "bav1", l: "BAV 1º grau" }, { v: "bav2", l: "BAV 2º grau" }, { v: "bav3", l: "BAV 3º grau" }, { v: "bbce", l: "BBCE" }, { v: "bbcd", l: "BBCD" }, { v: "outro", l: "Outro" }]} />
-          </Field>
-          <Field label="FC (bpm)"><Inp type="number" value={ecg.fc} onChange={v => setEcg(p => ({ ...p, fc: v }))} placeholder="72" /></Field>
-          <Field label="PR (ms)"><Inp type="number" value={ecg.pr} onChange={v => setEcg(p => ({ ...p, pr: v }))} placeholder="120–200" /></Field>
-          <Field label="QRS (ms)"><Inp type="number" value={ecg.qrs} onChange={v => setEcg(p => ({ ...p, qrs: v }))} placeholder="<120" /></Field>
-          <Field label="QTc (ms)"><Inp type="number" value={ecg.qtc} onChange={v => setEcg(p => ({ ...p, qtc: v }))} placeholder="<440" /></Field>
-          <Field label="Interpretação / Resultado" col={3}><Txt value={ecg.resultado} onChange={v => setEcg(p => ({ ...p, resultado: v }))} rows={2} placeholder="Ex: Ritmo sinusal regular sem alterações da repolarização" /></Field>
-        </Grid>
-      </div>
-      <div style={cardSt}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
-          <span style={{ fontFamily: C.head, fontSize: 13, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: "0.12em" }}>Análises Laboratoriais</span>
-          <div><Lbl>Data</Lbl><Inp type="date" value={labs.data} onChange={v => setLabs(p => ({ ...p, data: v }))} style={{ width: 150 }} /></div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(155px, 1fr))", gap: 14 }}>
-          {labFields(pid.sexo).map(lf => {
-            const col = labColor(labs[lf.key], lf.lo, lf.hi);
-            const hasVal = labs[lf.key] !== "";
-            return (
-              <div key={lf.key}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                  <Lbl>{lf.label}</Lbl>
-                  {lf.unit && <span style={{ fontSize: 9, color: C.textDim, fontFamily: C.mono }}>{lf.unit}</span>}
-                </div>
-                <div style={{ position: "relative" }}>
-                  <Inp type="number" value={labs[lf.key]} onChange={v => setLabs(p => ({ ...p, [lf.key]: v }))}
-                    placeholder={lf.ref}
-                    style={{ color: hasVal ? col : C.textDim, fontFamily: C.mono, fontWeight: hasVal ? 700 : 400, borderColor: hasVal && col !== C.green ? col : C.border }} />
-                  {hasVal && col !== C.green && (
-                    <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: col, fontWeight: 700 }}>
-                      {parseFloat(labs[lf.key]) < lf.lo ? "↓" : "↑"}
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 9, color: C.textDim, marginTop: 3, fontFamily: C.mono }}>Ref: {lf.ref}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>,
-
-    /* 5 — Via Aérea */
-    <div key={5} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Avaliação da Via Aérea</div>
-        <Grid cols={2} gap={16}>
-          <Field label="Mobilidade Cervical"><Sel value={via.mobilidade} onChange={v => setVia(p => ({ ...p, mobilidade: v }))} options={[{ v: "normal", l: "Normal (>35°)" }, { v: "reduzida", l: "Reduzida (15–35°)" }, { v: "muito_red", l: "Muito reduzida (<15°)" }]} /></Field>
-          <Field label="Abertura de Boca"><Sel value={via.abertura} onChange={v => setVia(p => ({ ...p, abertura: v }))} options={[{ v: ">4cm", l: ">4 cm (normal)" }, { v: "3-4cm", l: "3–4 cm (ligeiramente reduzida)" }, { v: "<3cm", l: "<3 cm (significativamente reduzida)" }]} /></Field>
-          <Field label="Distância Tiromentoniana"><Sel value={via.dtm} onChange={v => setVia(p => ({ ...p, dtm: v }))} options={[{ v: ">6.5cm", l: ">6.5 cm (normal)" }, { v: "6-6.5cm", l: "6–6.5 cm (borderline)" }, { v: "<6cm", l: "<6 cm (reduzida)" }]} /></Field>
-          <Field label="Protusão Mandibular (Bite Test)"><Sel value={via.protusao} onChange={v => setVia(p => ({ ...p, protusao: v }))} options={[{ v: "A", l: "Classe A — incisivos inferiores ultrapassam superiores" }, { v: "B", l: "Classe B — incisivos nivelam" }, { v: "C", l: "Classe C — impossível ultrapassar superiores" }]} /></Field>
-        </Grid>
-      </div>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Classificação de Mallampati</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {[{ v: "I", desc: "Palato mole, úvula, pilares e amígdalas visíveis", detail: "Fácil" }, { v: "II", desc: "Palato mole e úvula visíveis", detail: "Moderado" }, { v: "III", desc: "Apenas base da úvula visível", detail: "Difícil" }, { v: "IV", desc: "Palato mole não visível", detail: "Muito Difícil" }].map(m => {
-            const sel = via.mallampati === m.v;
-            const mc = m.v === "I" ? C.green : m.v === "II" ? C.yellow : m.v === "III" ? C.orange : C.red;
-            return (
-              <div key={m.v} onClick={() => setVia(p => ({ ...p, mallampati: m.v }))}
-                style={{ ...cardSt, cursor: "pointer", textAlign: "center", borderColor: sel ? mc : C.border, background: sel ? `${mc}18` : C.surface, transition: "all .2s" }}>
-                <div style={{ fontFamily: C.mono, fontSize: 28, fontWeight: 700, color: sel ? mc : C.textDim, marginBottom: 5 }}>{m.v}</div>
-                <div style={{ fontSize: 10, fontFamily: C.head, fontWeight: 700, color: mc, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>{m.detail}</div>
-                <div style={{ fontSize: 11, color: C.text, lineHeight: 1.4 }}>{m.desc}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Observações</div>
-        <Txt value={via.obs} onChange={v => setVia(p => ({ ...p, obs: v }))} rows={3} placeholder="Dentes móveis, próteses, microstomia, cicatrizes cervicais, stridor, massa cervical..." />
-      </div>
-    </div>,
-
-    /* 6 — Índices de Risco */
-    <div key={6} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={cardSt}>
-        <div style={sectionTitleSt}>Parâmetros para Cálculo</div>
-        <Grid cols={3} gap={16}>
-          <Field label="Classificação ASA">
-            <Sel value={asa} onChange={setAsa} options={[{ v: "I", l: "ASA I — Saudável" }, { v: "II", l: "ASA II — Ligeira" }, { v: "III", l: "ASA III — Grave" }, { v: "IV", l: "ASA IV — Risco de vida" }, { v: "V", l: "ASA V — Moribundo" }, { v: "E", l: "ASA E — Emergência" }]} />
-          </Field>
-          <Field label="Tipo de Cirurgia Proposta">
-            <Sel value={tipoCir} onChange={setTipoCir} options={[{ v: "superficial", l: "Superficial / endoscópica" }, { v: "ortopedica_minor", l: "Ortopédica minor" }, { v: "ortopedica_major", l: "Ortopédica major" }, { v: "intraperitoneal", l: "Intraperitoneal" }, { v: "intratoracica", l: "Intratorácica" }, { v: "vascular_sup", l: "Vascular suprainguinal" }, { v: "vascular_inf", l: "Vascular infrainguinal" }, { v: "neurocirurgia", l: "Neurocirurgia" }, { v: "urologica", l: "Urológica" }, { v: "outro", l: "Outro" }]} />
-          </Field>
-          <Field label="Opções (Apfel)">
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 4 }}>
-              <Checkbox label="Fumador activo" checked={apfelOpts.fumador} onChange={v => setApfelOpts(p => ({ ...p, fumador: v }))} />
-              <Checkbox label="NVPO prévia / cinetose" checked={apfelOpts.ponv} onChange={v => setApfelOpts(p => ({ ...p, ponv: v }))} />
-              <Checkbox label="Opioides pós-op previstos" checked={apfelOpts.opioides} onChange={v => setApfelOpts(p => ({ ...p, opioides: v }))} />
-            </div>
-          </Field>
-        </Grid>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(255px, 1fr))", gap: 14 }}>
-        {bmiInfo && <RiskCard title="Índice de Massa Corporal" score={bmi} level={bmiInfo.label} color={bmiInfo.color} desc={`Altura: ${med.altura} cm — Peso: ${med.peso} kg`} />}
-        {asa && <RiskCard title="Classificação ASA" level={`ASA ${asa}`} color={asa === "I" ? C.green : asa === "II" ? C.yellow : asa === "III" ? C.orange : C.red} desc={asa === "I" ? "Doente saudável sem patologia sistémica" : asa === "II" ? "Doença sistémica ligeira, sem limitação funcional" : asa === "III" ? "Doença sistémica grave com limitação funcional" : asa === "IV" ? "Risco de vida constante" : asa === "V" ? "Moribundo" : "Cirurgia de emergência"} />}
-        <RiskCard title="RCRI — Risco Cardíaco (Lee)" score={rcri.score} pct={rcri.pct} level={rcri.level} color={rcri.color} factors={rcri.factors} desc={rcri.score === 0 ? "Risco cardíaco perioperatório muito baixo" : undefined} />
-        <RiskCard title="Risco de Via Aérea Difícil" level={airwayRisk.level} color={airwayRisk.color} desc={airwayRisk.desc} factors={[via.mallampati ? `Mallampati ${via.mallampati}` : null, via.abertura ? `Abertura: ${via.abertura}` : null, via.mobilidade ? `Cervical: ${via.mobilidade.replace("_", " ")}` 
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
