@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDSS — Referenciação Pré-operatória para Anestesiologia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F0F4F8;color:#1A202C;min-height:100vh}
+#app{min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+.header{background:#1B3A5C;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.header-title{display:flex;align-items:center;gap:12px}
+.header-icon{font-size:1.6rem}
+.header-main{font-size:1rem;font-weight:700;letter-spacing:.01em}
+.header-sub{font-size:.75rem;opacity:.75;margin-top:2px}
+.back-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.85rem;transition:.15s}
+.back-btn:hover{background:rgba(255,255,255,.35)}
+
+/* MAIN */
+.main{flex:1;padding:20px;max-width:1100px;width:100%;margin:0 auto}
+.main-clinical{max-width:1300px}
+
+/* STEP DOTS */
+.step-indicator{margin-bottom:20px}
+.step-dots{display:flex;align-items:center;gap:0}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dot{width:30px;height:30px;border-radius:50%;background:#CBD5E0;color:#4A5568;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.step-dot.active .dot{background:#1B3A5C;color:#fff}
+.step-dot.done .dot{background:#2F855A;color:#fff}
+.dot-label{font-size:.65rem;color:#718096;white-space:nowrap}
+.dot-line{flex:1;height:2px;background:#CBD5E0;min-width:20px;margin:0 2px}
+.done-line{background:#2F855A}
+
+/* CARD */
+.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:16px}
+.card-title{font-size:1.1rem;font-weight:700;color:#1B3A5C;margin-bottom:6px}
+.card-sub{font-size:.85rem;color:#718096;margin-bottom:20px}
+
+/* SPECIALTY GRID */
+.specialty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.specialty-btn{background:#F7FAFC;border:2px solid #E2E8F0;border-radius:10px;padding:18px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.2s;text-align:center}
+.specialty-btn:hover{border-color:#1B3A5C;background:#EBF4FF;transform:translateY(-2px);box-shadow:0 4px 12px rgba(27,58,92,.15)}
+.spec-icon{font-size:2rem}
+.spec-name{font-size:.85rem;font-weight:600;color:#2D3748}
+
+/* PROCEDURE LIST */
+.proc-list{display:flex;flex-direction:column;gap:8px}
+.proc-btn{background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:.15s;text-align:left}
+.proc-btn:hover{border-color:#1B3A5C;background:#EBF4FF}
+.proc-name{font-size:.9rem;font-weight:500;color:#2D3748}
+.proc-risk{font-size:.75rem;font-weight:700;padding:3px 8px;border-radius:12px;white-space:nowrap}
+
+/* RISK BADGES */
+.risk-1{background:#C6F6D5;color:#22543D}
+.risk-2{background:#BEE3F8;color:#2A4365}
+.risk-3{background:#FEFCBF;color:#744210}
+.risk-4{background:#FED7AA;color:#7B341E}
+.risk-5{background:#FED7D7;color:#742A2A}
+.badge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:.75rem;font-weight:700}
+
+/* PROCEDURE TABLE */
+.proc-table{width:100%;border-collapse:collapse;margin:12px 0}
+.proc-table tr{border-bottom:1px solid #E2E8F0}
+.proc-table td{padding:10px;font-size:.88rem}
+.pt-label{color:#718096;font-weight:600;width:220px}
+
+/* LEVEL 3 */
+.early-exit{background:#F0FFF4;border:2px solid #38A169;border-radius:10px;padding:16px;display:flex;align-items:flex-start;gap:12px;margin:16px 0}
+.exit-icon{font-size:2rem}
+.exit-title{font-size:1rem;font-weight:700;color:#22543D}
+.exit-sub{font-size:.85rem;color:#2F4A3A;margin-top:4px}
+.flags-preview{background:#FFFBEB;border:1px solid #F6E05E;border-radius:8px;padding:12px;margin:12px 0}
+.fp-title{font-size:.8rem;font-weight:600;color:#744210;margin-bottom:8px}
+.fp-flag{font-size:.85rem;padding:4px 0;color:#2D3748}
+.fp-p1{color:#C53030;font-weight:600}
+.fp-p2{color:#C05621}
+.level3-message{background:#EBF4FF;border-left:4px solid #1B3A5C;padding:12px;border-radius:0 8px 8px 0;font-size:.9rem;color:#2A4365;margin:12px 0}
+.level3-btns{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.btn-primary{background:#1B3A5C;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;transition:.15s}
+.btn-primary:hover{background:#2D5986}
+.btn-secondary{background:#fff;color:#1B3A5C;border:2px solid #1B3A5C;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;transition:.15s}
+.btn-secondary:hover{background:#EBF4FF}
+.btn-green{background:#2F855A}
+.btn-green:hover{background:#276749}
+
+/* CLINICAL LAYOUT */
+.clinical-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+@media(max-width:800px){.clinical-layout{grid-template-columns:1fr}}
+
+/* PROGRESS BAR */
+.progress-bar-wrap{background:#E2E8F0;border-radius:99px;height:10px;margin-bottom:16px;position:relative;overflow:visible}
+.progress-bar-fill{background:#1B3A5C;height:100%;border-radius:99px;transition:width .4s}
+.progress-label{font-size:.75rem;color:#718096;margin-top:4px;text-align:center}
+
+/* QUESTION CARD */
+.question-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.q-system-badge{display:inline-block;color:#fff;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;margin-bottom:14px}
+.q-text{font-size:1rem;font-weight:500;color:#1A202C;line-height:1.7;margin-bottom:14px;white-space:pre-wrap}
+.q-hint{background:#EBF8FF;border-left:3px solid #63B3ED;padding:10px;border-radius:0 6px 6px 0;font-size:.82rem;color:#2C5282;margin-bottom:16px;line-height:1.5}
+.q-btns{display:flex;gap:12px}
+.btn-sim{flex:1;background:#2F855A;color:#fff;border:none;padding:14px;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:.15s}
+.btn-sim:hover{background:#276749;transform:translateY(-1px)}
+.btn-nao{flex:1;background:#C53030;color:#fff;border:none;padding:14px;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:.15s}
+.btn-nao:hover{background:#9B2C2C;transform:translateY(-1px)}
+.nav-hint{font-size:.75rem;color:#A0AEC0;text-align:center;margin-top:10px}
+
+/* CRITERIA PANEL */
+.criteria-panel{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:16px}
+.cp-title{font-size:.85rem;font-weight:700;color:#1B3A5C;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #E2E8F0}
+.cp-empty{font-size:.82rem;color:#A0AEC0;font-style:italic}
+.cp-section{font-size:.7rem;font-weight:800;letter-spacing:.08em;margin:10px 0 4px;padding:3px 6px;border-radius:4px}
+.cp-p1{background:#FFF5F5;color:#C53030}
+.cp-p2{background:#FFFAF0;color:#C05621}
+.cp-p3{background:#FFFFF0;color:#744210}
+.cp-item{font-size:.78rem;padding:3px 0;line-height:1.5;color:#2D3748}
+.cp-item-p1{color:#C53030;font-weight:500}
+.cp-item-p2{color:#744210}
+.cp-item-p3{color:#5F4408}
+
+/* REPORT */
+.report-decision{border-radius:10px;padding:18px 22px;margin-bottom:16px;text-align:center}
+.rd-main{font-size:1.3rem;font-weight:800;letter-spacing:.03em}
+.rd-priority{font-size:.9rem;margin-top:4px;font-weight:600;opacity:.9}
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.report-grid{grid-template-columns:1fr}}
+.report-section{background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.report-section-full{grid-column:1/-1}
+.rs-title{font-size:.85rem;font-weight:700;color:#1B3A5C;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E2E8F0}
+.report-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.report-table tr{border-bottom:1px solid #EDF2F7}
+.report-table td{padding:7px 4px}
+.report-table td:first-child{color:#718096;width:48%;font-weight:500}
+.rs-flag{border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:.83rem;line-height:1.5}
+.rs-p1{background:#FFF5F5;border-left:3px solid #C53030;color:#742A2A}
+.rs-p2{background:#FFFAF0;border-left:3px solid #ED8936;color:#744210}
+.rs-p3{background:#FEFCE8;border-left:3px solid #ECC94B;color:#5F4408}
+.rs-ref{font-size:.7rem;color:#A0AEC0;margin-top:2px}
+.rs-none{font-size:.83rem;color:#718096;font-style:italic}
+.mcdt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px;margin-bottom:10px}
+.mcdt-item{background:#F0FFF4;border:1px solid #9AE6B4;border-radius:6px;padding:8px 10px;font-size:.82rem;color:#22543D;font-weight:500}
+.mcdt-note{font-size:.75rem;color:#718096;background:#F7FAFC;padding:8px;border-radius:6px;margin-top:4px}
+.refs{font-size:.78rem;color:#4A5568;line-height:2}
+.report-footer{text-align:center;font-size:.7rem;color:#A0AEC0;padding:12px;margin-top:8px}
+
+/* PRINT */
+@media print{
+  .back-btn,.btn-primary,.btn-secondary,.btn-sim,.btn-nao,.btn-green{display:none!important}
+  .header{background:#1B3A5C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA — ESPECIALIDADES
+// ═══════════════════════════════════════════════════════════════
+const SPECIALTIES = [
+  {id:'CG',   name:'Cirurgia Geral',        icon:'🔪'},
+  {id:'ORT',  name:'Ortopedia',             icon:'🦴'},
+  {id:'GIN',  name:'Ginecologia',           icon:'🩺'},
+  {id:'ORL',  name:'ORL',                  icon:'👂'},
+  {id:'OFT',  name:'Oftalmologia',          icon:'👁️'},
+  {id:'GAST', name:'Gastrenterologia',      icon:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 42" width="38" height="38" fill="none" stroke="#92400E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7 Q10 2 20 2 Q30 2 30 9 Q30 17 20 17 Q13 17 13 11 Q13 7 18 7 Q24 7 24 13 Q24 21 16 23 Q9 25 9 32 Q9 38 17 39 Q25 40 27 35"/></svg>`},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// DATA — PROCEDIMENTOS
+// risk: 1=Muito Baixo, 2=Baixo, 3=Intermédio, 4=Elevado, 5=Muito Elevado
+// ecg/cbc/coag/cxr/pfr/echo: true | 'cond' (condicional) | false
+// biochem: 'basic' | 'full' | false | custom string
+// bloodLoss: ml estimado
+// amb: true=ambulatório, false=internamento
+// mandatoryConsult: true/false
+// diffAirway: true | 'cond' | false
+// ═══════════════════════════════════════════════════════════════
+const PROCEDURES = [
+  // ── CIRURGIA GERAL ───────────────────────────────────────────
+  {id:'CG01',sp:'CG',name:'Hérnia inguinal/crural laparoscópica',anesthesia:'Geral/Regional',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'CG02',sp:'CG',name:'Hérnia inguinal/crural aberta',anesthesia:'Geral/Regional/Local',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'CG03',sp:'CG',name:'Hérnia umbilical/incisional',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'CG04',sp:'CG',name:'Colecistectomia laparoscópica',anesthesia:'Geral',risk:3,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'CG05',sp:'CG',name:'Colecistectomia aberta (conversão)',anesthesia:'Geral',risk:3,bloodLoss:800,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:'cond',cxr:false,pfr:false,echo:'cond',note:'Internamento; reserva de sangue'},
+  {id:'CG06',sp:'CG',name:'Hemicolectomia / Colectomia',anesthesia:'Geral',risk:4,bloodLoss:1000,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:true,cxr:'cond',pfr:false,echo:'cond',note:'Reserva de sangue; UCI se ASA IV'},
+  {id:'CG07',sp:'CG',name:'Gastrectomia (parcial ou total)',anesthesia:'Geral',risk:4,bloodLoss:1200,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:true,cxr:'cond',pfr:false,echo:'cond',note:'Reserva de sangue'},
+  {id:'CG08',sp:'CG',name:'Cirurgia bariátrica (bypass/sleeve)',anesthesia:'Geral',risk:4,bloodLoss:300,amb:false,mandatoryConsult:true,diffAirway:true,ecg:true,cbc:true,biochem:'full',coag:true,cxr:'cond',pfr:'cond',echo:'cond',note:'Via aérea difícil provável; eco se IMC≥50 ou HTP'},
+  {id:'CG09',sp:'CG',name:'Ressecção hepática',anesthesia:'Geral',risk:4,bloodLoss:1500,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:true,cxr:'cond',pfr:false,echo:'cond',note:'Cell-saver; UCI'},
+  {id:'CG10',sp:'CG',name:'Pancreatoduodenectomia (Whipple)',anesthesia:'Geral',risk:5,bloodLoss:1500,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:true,cxr:false,pfr:false,echo:true,note:'UCI pós-op'},
+  {id:'CG11',sp:'CG',name:'Tiroidectomia / Paratiroidectomia',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:'cond',ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'VA difícil se bócio volumoso'},
+  {id:'CG12',sp:'CG',name:'Mastectomia / cirurgia mamária',anesthesia:'Geral/Loco-regional',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'CG13',sp:'CG',name:'Esofagectomia',anesthesia:'Geral + epidural torácico',risk:5,bloodLoss:1500,amb:false,mandatoryConsult:true,diffAirway:'cond',ecg:true,cbc:true,biochem:'full',coag:true,cxr:true,pfr:true,echo:true,note:'Anestesia one-lung; UCI pós-op'},
+  {id:'CG14',sp:'CG',name:'Proctocolectomia / cirurgia colorectal major',anesthesia:'Geral',risk:4,bloodLoss:1200,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:true,cxr:'cond',pfr:false,echo:'cond',note:'Reserva de sangue'},
+  {id:'CG15',sp:'CG',name:'Apendicectomia laparoscópica',anesthesia:'Geral',risk:2,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:true,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  // ── ORTOPEDIA ────────────────────────────────────────────────
+  {id:'ORT01',sp:'ORT',name:'Artroscopia do joelho (meniscectomia)',anesthesia:'Regional/Geral',risk:2,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'ORT02',sp:'ORT',name:'Artroscopia do ombro',anesthesia:'Regional/Geral',risk:2,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:'cond',ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'Posição sentado: hipotensão'},
+  {id:'ORT03',sp:'ORT',name:'Prótese total da anca (PTA)',anesthesia:'Regional/Geral',risk:3,bloodLoss:800,amb:false,mandatoryConsult:false,diffAirway:false,ecg:true,cbc:true,biochem:'basic',coag:'cond',cxr:false,pfr:false,echo:'cond',note:'Tromboprofilaxia; reserva'},
+  {id:'ORT04',sp:'ORT',name:'Prótese total do joelho (PTJ)',anesthesia:'Regional/Geral',risk:3,bloodLoss:600,amb:false,mandatoryConsult:false,diffAirway:false,ecg:true,cbc:true,biochem:'basic',coag:'cond',cxr:false,pfr:false,echo:'cond',note:'Torniquete; tromboprofilaxia'},
+  {id:'ORT05',sp:'ORT',name:'Osteossíntese fémur proximal (fratura da anca)',anesthesia:'Regional/Geral',risk:4,bloodLoss:600,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:'cond',cxr:false,pfr:false,echo:'cond',note:'Urgência diferida; alto risco em idoso'},
+  {id:'ORT06',sp:'ORT',name:'Osteossíntese diáfise (tíbia/fémur)',anesthesia:'Regional/Geral',risk:3,bloodLoss:600,amb:false,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:true,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'ORT07',sp:'ORT',name:'Discectomia / laminectomia lombar',anesthesia:'Geral',risk:3,bloodLoss:400,amb:false,mandatoryConsult:false,diffAirway:'cond',ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'Posição prone'},
+  {id:'ORT08',sp:'ORT',name:'Artrodese vertebral instrumentada',anesthesia:'Geral',risk:4,bloodLoss:1200,amb:false,mandatoryConsult:true,diffAirway:'cond',ecg:true,cbc:true,biochem:'full',coag:'cond',cxr:false,pfr:false,echo:'cond',note:'Cell-saver; neuromonitorização'},
+  {id:'ORT09',sp:'ORT',name:'Cirurgia do pé/tornozelo (hallux, etc.)',anesthesia:'Regional/Geral',risk:2,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'ORT10',sp:'ORT',name:'Cirurgia membro superior (articulação/tendão)',anesthesia:'Regional/Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:'Bloqueio plexo braquial'},
+  // ── GINECOLOGIA ───────────────────────────────────────────────
+  {id:'GIN01',sp:'GIN',name:'Histeroscopia diagnóstica / polipectomia',anesthesia:'Sedação/Geral',risk:1,bloodLoss:50,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'GIN02',sp:'GIN',name:'Laparoscopia diagnóstica / terapêutica',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'GIN03',sp:'GIN',name:'Miomectomia (laparoscópica ou aberta)',anesthesia:'Geral',risk:3,bloodLoss:700,amb:false,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:true,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'Reserva se miomas grandes'},
+  {id:'GIN04',sp:'GIN',name:'Histerectomia laparoscópica',anesthesia:'Geral',risk:3,bloodLoss:500,amb:false,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:true,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'GIN05',sp:'GIN',name:'Histerectomia aberta / radical',anesthesia:'Geral',risk:4,bloodLoss:1000,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:false,cxr:false,pfr:false,echo:'cond',note:'Reserva de sangue'},
+  {id:'GIN06',sp:'GIN',name:'Cirurgia oncológica ginecológica major',anesthesia:'Geral',risk:5,bloodLoss:1500,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:'cond',cxr:'cond',pfr:false,echo:'cond',note:'UCI pós-op'},
+  // ── ORL ──────────────────────────────────────────────────────
+  {id:'ORL01',sp:'ORL',name:'Amigdalectomia / adenoidectomia',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:'cond',ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:'VA partilhada'},
+  {id:'ORL02',sp:'ORL',name:'Septoplastia / rinoplastia',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'ORL03',sp:'ORL',name:'Timpanoplastia / mastoidectomia',anesthesia:'Geral',risk:2,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'ORL04',sp:'ORL',name:'Cirurgia endoscópica sinusal (FESS)',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'ORL05',sp:'ORL',name:'Laringoscopia / microcirurgia laríngea',anesthesia:'Geral',risk:3,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:true,ecg:false,cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'VA difícil; laser possível'},
+  {id:'ORL06',sp:'ORL',name:'Laringectomia (parcial ou total)',anesthesia:'Geral',risk:4,bloodLoss:700,amb:false,mandatoryConsult:true,diffAirway:true,ecg:true,cbc:true,biochem:'full',coag:'cond',cxr:'cond',pfr:false,echo:'cond',note:'VA difícil; traqueostomia'},
+  {id:'ORL07',sp:'ORL',name:'Esvaziamento cervical',anesthesia:'Geral',risk:4,bloodLoss:700,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:false,cxr:false,pfr:false,echo:'cond',note:''},
+  {id:'ORL08',sp:'ORL',name:'Paratiroidectomia',anesthesia:'Geral',risk:2,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'Cálcio e PTH pré-op'},
+  // ── OFTALMOLOGIA ─────────────────────────────────────────────
+  {id:'OFT01',sp:'OFT',name:'Facoemulsificação sob anestesia tópica',anesthesia:'Tópica',risk:1,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:'Sem consulta se ASA I-II; consulta se ASA≥III ou comorbilidades'},
+  {id:'OFT02',sp:'OFT',name:'Facoemulsificação sob sedação',anesthesia:'Sedação',risk:1,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:'Avaliar comorbilidades'},
+  {id:'OFT03',sp:'OFT',name:'Vitrectomia posterior',anesthesia:'Geral/Regional/Sedação',risk:2,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'OFT04',sp:'OFT',name:'Cirurgia do glaucoma (trabeculectomia)',anesthesia:'Geral/Regional',risk:2,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'OFT05',sp:'OFT',name:'Cirurgia do descolamento da retina',anesthesia:'Geral',risk:2,bloodLoss:0,amb:false,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  // ── GASTRENTEROLOGIA ─────────────────────────────────────────
+  {id:'GAST01',sp:'GAST',name:'Colonoscopia sob sedação (Propofol)',anesthesia:'Sedação',risk:1,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:'Consulta se ASA≥III, VA difícil ou comorbilidades major'},
+  {id:'GAST02',sp:'GAST',name:'Endoscopia alta (EDA) sob sedação',anesthesia:'Sedação',risk:1,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:'cond',ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'GAST03',sp:'GAST',name:'CPRE (Colangiopancreatografia Retrógrada)',anesthesia:'Sedação profunda/Geral',risk:3,bloodLoss:100,amb:true,mandatoryConsult:false,diffAirway:'cond',ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'Decúbito ventral; risco pancreatite'},
+  {id:'GAST04',sp:'GAST',name:'Mucosectomia endoscópica / ESD',anesthesia:'Geral/Sedação profunda',risk:3,bloodLoss:200,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:false,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:'Duração prolongada'},
+  // ── UROLOGIA ─────────────────────────────────────────────────
+  {id:'URO01',sp:'URO',name:'Cistoscopia flexível diagnóstica',anesthesia:'Local/Sedação',risk:1,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'URO02',sp:'URO',name:'Ressecção transuretral da bexiga (TURB)',anesthesia:'Regional/Geral',risk:2,bloodLoss:400,amb:true,mandatoryConsult:false,diffAirway:false,ecg:'cond',cbc:true,biochem:'basic',coag:false,cxr:false,pfr:false,echo:false,note:''},
+  {id:'URO03',sp:'URO',name:'Ressecção transuretral próstata (TURP)',anesthesia:'Regional/Geral',risk:3,bloodLoss:700,amb:false,mandatoryConsult:false,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:false,cxr:false,pfr:false,echo:false,note:'Síndrome RTU; hiponatremia'},
+  {id:'URO04',sp:'URO',name:'Prostatectomia radical (laparoscópica/robótica)',anesthesia:'Geral',risk:4,bloodLoss:700,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:false,cxr:false,pfr:false,echo:'cond',note:'Trendelenburg prolongado'},
+  {id:'URO05',sp:'URO',name:'Nefrectomia (laparoscópica ou aberta)',anesthesia:'Geral',risk:4,bloodLoss:1000,amb:false,mandatoryConsult:true,diffAirway:false,ecg:true,cbc:true,biochem:'full',coag:false,cxr:false,pfr:false,echo:'cond',note:'Reserva de sangue'},
+  {id:'URO06',sp:'URO',name:'Litotrícia extracorporal (LEOC)',anesthesia:'Sedação/Analgesia',risk:1,bloodLoss:0,amb:true,mandatoryConsult:false,diffAirway:false,ecg:false,cbc:false,biochem:false,coag:false,cxr:false,pfr:false,echo:false,note:''},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// DATA — PERGUNTAS CLÍNICAS (NÍVEL 4)
+// each question: id, text, hint?, yes:{flags,mcdt,follow}, no:{flags,mcdt,follow}
+// follow: array of question IDs to insert next in queue
+// flags: [{level:'p1'|'p2'|'p3', text, ref}]
+// mcdt: strings
+// ═══════════════════════════════════════════════════════════════
+const SYSTEMS = [
+  {id:'idade', title:'Idade e Estado Funcional', icon:'👤', color:'#195E6E', questions:[
+    {id:'q_age_75', text:'O doente tem ≥ 75 anos?',
+     hint:'A idade avançada por si só não é critério de consulta, mas condiciona a avaliação de fragilidade.',
+     yes:{flags:[],mcdt:[],follow:['q_frailty']}, no:{flags:[],mcdt:[],follow:['q_cap_func']}},
+    {id:'q_frailty', text:'O doente apresenta pelo menos um dos seguintes?\n• CFS ≥ 4 (vulnerável ou frágil)\n• Dependência em ≥ 1 ABVD\n• Défice cognitivo (MMSE < 24 ou demência)\n• Capacidade funcional < 4 MET',
+     hint:'CFS = Clinical Frailty Scale. ABVD = atividades básicas de vida diária. "Consegue subir um lance de escadas sem parar?" — se não, < 4 MET.',
+     yes:{flags:[{level:'p2',text:'Fragilidade / Dependência / Défice Cognitivo em doente ≥ 75 anos',ref:'ESAIC 2023'}],mcdt:[],follow:['q_cap_func']},
+     no:{flags:[],mcdt:[],follow:['q_cap_func']}},
+    {id:'q_cap_func', text:'Capacidade funcional < 4 MET sem causa explicada?\n(Incapaz de subir 1 lance de escadas, passear em patamar ou realizar tarefas domésticas simples)',
+     hint:'Aplica-se a qualquer idade. Só relevante como critério de consulta em cirurgia de risco ≥ intermédio.',
+     yes:{flags:[{level:'p2',text:'Capacidade Funcional < 4 MET — investigar cardiopatia/doença respiratória oculta',ref:'ESAIC 2023/ACC-AHA'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'cardio', title:'Sistema Cardiovascular', icon:'❤️', color:'#7B2D00', questions:[
+    {id:'q_cv_gateway', text:'O doente tem patologia cardiovascular conhecida?\n(Cardiopatia isquémica, HTA, Insuficiência Cardíaca, Arritmia, Valvulopatia, DAP)',
+     hint:'Se não tem qualquer patologia cardiovascular, avançar diretamente para o sistema seguinte.',
+     yes:{flags:[],mcdt:[],follow:['q_sca','q_hta','q_ic','q_arritmia','q_valvulo','q_dap','q_anticoag']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_sca', text:'SCA / EAM nos últimos 60 dias?\nOU stent coronário farmacoativo (DES) nos últimos 6 meses?\nOU stent convencional (BMS) nos últimos 30 dias?',
+     hint:'EAM recente (<60 dias): diferir cirurgia eletiva. Stent DES <6 meses: risco elevado de trombose se DAPT suspensa.',
+     yes:{flags:[{level:'p1',text:'SCA/EAM Recente ou Stent Coronário Recente — diferir cirurgia eletiva; consulta cardiologia',ref:'ESAIC 2023/ESC 2022'}],mcdt:['ecg'],follow:['q_dapt']},
+     no:{flags:[],mcdt:[],follow:['q_ci_estavel','q_dapt']}},
+    {id:'q_ci_estavel', text:'Cardiopatia isquémica crónica estável?\n(Angina estável, EAM > 60 dias, CABG ou ICP > 6 meses)',
+     hint:'',
+     yes:{flags:[{level:'p2',text:'Cardiopatia Isquémica Crónica Estável',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_dapt', text:'O doente faz dupla antiagregação plaquetária (DAPT)?\n(AAS + clopidogrel, ticagrelor ou prasugrel)',
+     hint:'NUNCA suspender P2Y12 sem avaliação multidisciplinar. Risco de trombose de stent.',
+     yes:{flags:[{level:'p1',text:'DAPT em Stent Coronário — decisão multidisciplinar antes de suspender P2Y12',ref:'ESAIC 2023/ESC 2022'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_hta', text:'O doente tem Hipertensão Arterial (HTA)?',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_hta_grave','q_hta_loa']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_hta_grave', text:'HTA com PA sistólica > 180 mmHg OU PA diastólica > 110 mmHg na avaliação atual?',
+     hint:'HTA grave não controlada: diferir cirurgia eletiva. Iniciar/ajustar terapêutica e reavaliar em 4-6 semanas.',
+     yes:{flags:[{level:'p1',text:'HTA Grave Não Controlada (PA > 180/110 mmHg) — diferir cirurgia eletiva',ref:'ESAIC 2023/ESC 2021'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_hta_loa']}},
+    {id:'q_hta_loa', text:'HTA com lesão de órgão-alvo documentada?\n(HVE, nefropatia hipertensiva, retinopatia, AVC hipertensivo)',
+     hint:'',
+     yes:{flags:[{level:'p2',text:'HTA com Lesão de Órgão-Alvo',ref:'ESAIC 2023'}],mcdt:['ecg','cbc'],follow:[]},
+     no:{flags:[],mcdt:['ecg'],follow:[]}},
+    {id:'q_ic', text:'O doente tem Insuficiência Cardíaca (IC) diagnosticada?',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_ic_descomp','q_ic_feve']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_ic_descomp', text:'IC descompensada atual?\n(Ortopneia, edema pulmonar, NYHA IV, instabilidade hemodinâmica)',
+     hint:'IC descompensada: maior fator de risco perioperatório. Diferir até compensação.',
+     yes:{flags:[{level:'p1',text:'Insuficiência Cardíaca Descompensada — diferir cirurgia; otimização obrigatória',ref:'ESAIC 2023/ESC 2021'}],mcdt:['ecg','cxr','bnp','echo'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_ic_feve']}},
+    {id:'q_ic_feve', text:'IC compensada com FEVE < 35%\nOU sem ecocardiograma nos últimos 12 meses?',
+     hint:'FEVE < 35%: risco muito elevado. Sem eco recente: não é possível estratificar adequadamente.',
+     yes:{flags:[{level:'p2',text:'IC Compensada com FEVE < 35% ou Função Desconhecida — ecocardiograma obrigatório',ref:'ESAIC 2023'}],mcdt:['ecg','echo','bnp'],follow:[]},
+     no:{flags:[{level:'p2',text:'IC Compensada (NYHA I-II) sob terapêutica otimizada',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]}},
+    {id:'q_arritmia', text:'O doente tem FA/Flutter, pacemaker, CDI ou bloqueio AV 2.º-3.º grau?',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_fa_nc','q_deci','q_bav']},
+     no:{flags:[],mcdt:[],follow:['q_sincope']}},
+    {id:'q_fa_nc', text:'FA / Flutter com FC > 100/min em repouso (não controlada)?',
+     hint:'FA não controlada associa-se a risco elevado de instabilidade hemodinâmica intraoperatória.',
+     yes:{flags:[{level:'p1',text:'FA/Flutter Não Controlada (FC > 100) — diferir cirurgia; controlo da FC obrigatório',ref:'ESAIC 2023/ESC 2020'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[{level:'p2',text:'FA/Flutter Controlada sob terapêutica',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]}},
+    {id:'q_deci', text:'Pacemaker ou CDI implantado?',
+     hint:'Bisturi monopolar pode interferir com DECI. Necessário relatório de follow-up e plano de gestão intraoperatória.',
+     yes:{flags:[{level:'p2',text:'Dispositivo Cardíaco Implantável (PM/CDI) — relatório + plano gestão intraoperatória',ref:'ESAIC 2023/EHRA 2019'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_bav', text:'Bloqueio AV de 2.º ou 3.º grau sem pacemaker implantado?',
+     hint:'Risco de bradicardia grave intraoperatória. Avaliação cardiológica obrigatória antes de cirurgia eletiva.',
+     yes:{flags:[{level:'p1',text:'BAV Avançado sem Pacemaker — referenciação urgente a Cardiologia',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_sincope', text:'Síncopes recentes (últimos 6 meses) sem diagnóstico estabelecido?',
+     hint:'Síncope não esclarecida pode representar arritmia maligna, EA grave ou cardiomiopatia obstrutiva.',
+     yes:{flags:[{level:'p1',text:'Síncope Não Esclarecida — referenciação urgente a Cardiologia',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_valvulo', text:'O doente tem valvulopatia conhecida ou prótese valvular cardíaca?',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_ea_grave','q_valvulo_mec']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_ea_grave', text:'Estenose Aórtica grave?\n(Área válvular < 1 cm² OU gradiente médio > 40 mmHg OU sintomática)',
+     hint:'EA grave não corrigida: mortalidade perioperatória pode atingir 10%. Avaliar TAVI/cirurgia valvular antes de cirurgia eletiva.',
+     yes:{flags:[{level:'p1',text:'Estenose Aórtica Grave — avaliação multidisciplinar; diferir cirurgia eletiva',ref:'ESAIC 2023/ESC 2021'}],mcdt:['echo','ecg'],follow:[]},
+     no:{flags:[{level:'p2',text:'Valvulopatia Moderada / Prótese Valvular',ref:'ESAIC 2023'}],mcdt:['echo','ecg'],follow:[]}},
+    {id:'q_valvulo_mec', text:'Prótese valvular mecânica (requer anticoagulação permanente)?',
+     hint:'Necessário plano de bridge com heparina. Risco trombótico elevado se anticoagulação interrompida.',
+     yes:{flags:[],mcdt:[],follow:['q_anticoag']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_dap', text:'Doença Arterial Periférica sintomática (claudicação, isquemia crítica)\nOU AVC/AIT nos últimos 6 meses?',
+     hint:'DAP grave é marcador de aterosclerose sistémica. AVC recente: risco de re-enfarte cerebral perioperatório.',
+     yes:{flags:[{level:'p2',text:'DAP Sintomática / AVC ou AIT Recente (< 6 meses)',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_anticoag', text:'O doente faz anticoagulação oral?\n(Varfarina, Rivaroxabano, Apixabano, Edoxabano, Dabigatrano)\nOU HBPM em dose terapêutica?',
+     hint:'Necessário plano de suspensão perioperatória. AVK: considerar bridge. DOAC: suspender conforme meia-vida e risco hemorrágico.',
+     yes:{flags:[{level:'p2',text:'Anticoagulação Oral / HBPM Terapêutica — plano de gestão perioperatória',ref:'ESAIC 2023/ESC 2022'}],mcdt:['coag'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'resp', title:'Sistema Respiratório', icon:'🫁', color:'#1F6B40', questions:[
+    {id:'q_resp_gateway', text:'O doente tem doença respiratória crónica conhecida?\n(DPOC, Asma, SAOS, Doença Pulmonar Intersticial, Hipertensão Pulmonar)',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_hp','q_dpoc','q_asma','q_saos','q_dpi']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_hp', text:'Hipertensão Pulmonar documentada?\n(PAP sistólica > 40 mmHg em ecocardiograma OU diagnóstico de cateterismo)',
+     hint:'HP grave: um dos fatores de risco perioperatório mais graves. Avaliação multidisciplinar obrigatória.',
+     yes:{flags:[{level:'p1',text:'Hipertensão Pulmonar — referenciação urgente a Pneumologia/Cardiologia',ref:'ESAIC 2023'}],mcdt:['ecg','echo','pfr','gasimetria'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_dpoc', text:'O doente tem DPOC diagnosticado?',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_dpoc_grave','q_dpoc_exac']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_dpoc_grave', text:'DPOC GOLD 3–4 (VEMS < 50% do previsto)\nOU DPOC sem PFR realizadas nos últimos 12 meses?',
+     hint:'DPOC GOLD 3-4 aumenta o risco de falência respiratória pós-op. PFR permitem estadiar e orientar.',
+     yes:{flags:[{level:'p2',text:'DPOC Grave (GOLD 3-4) ou Não Estadiado — PFR + gasimetria obrigatórias',ref:'ESAIC 2023/GOLD 2023'}],mcdt:['pfr','gasimetria','cxr'],follow:[]},
+     no:{flags:[{level:'p2',text:'DPOC GOLD 1-2 — PFR se não realizadas nos últimos 12 meses',ref:'ESAIC 2023'}],mcdt:['pfr'],follow:[]}},
+    {id:'q_dpoc_exac', text:'Exacerbação de DPOC nos últimos 30 dias?',
+     hint:'Diferir cirurgia eletiva até resolução completa e recuperação ao estado basal.',
+     yes:{flags:[{level:'p1',text:'Exacerbação Recente de DPOC — diferir cirurgia eletiva',ref:'ESAIC 2023'}],mcdt:['pfr','gasimetria'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_asma', text:'Asma brônquica NÃO CONTROLADA?\n(Crises frequentes, uso de β2 agonista curta ação > 2×/semana, despertar noturno)',
+     hint:'Asma controlada sob terapêutica habitual NÃO é critério de consulta. Continuar medicação até à cirurgia.',
+     yes:{flags:[{level:'p2',text:'Asma Não Controlada — diferir cirurgia até controlo adequado',ref:'ESAIC 2023'}],mcdt:['pfr'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_saos', text:'SAOS grave (IAH > 30/h, necessita CPAP/VNI)\nOU suspeita forte (roncopatia intensa + hipersonolência + apneias observadas)?',
+     hint:'SAOS grave: risco elevado de obstrução da via aérea pós-extubação. O doente deve trazer equipamento CPAP/VNI no dia da cirurgia.',
+     yes:{flags:[{level:'p2',text:'SAOS Grave / Suspeita Forte — trazer CPAP/VNI; analgesia multimodal sem opioides',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_dpi', text:'Doença Pulmonar Intersticial?\n(Fibrose pulmonar idiopática, sarcoidose, pneumonite de hipersensibilidade)',
+     hint:'',
+     yes:{flags:[{level:'p2',text:'Doença Pulmonar Intersticial — PFR + TC tórax + gasimetria',ref:'ESAIC 2023'}],mcdt:['pfr','gasimetria','cxr'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'endoc', title:'Sistema Endócrino', icon:'🔬', color:'#4B4B7A', questions:[
+    {id:'q_dm', text:'O doente tem Diabetes Mellitus (tipo 1 ou tipo 2)?',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_dm_insulina','q_dm_hba1c','q_dm_complic']},
+     no:{flags:[],mcdt:[],follow:['q_tiroide','q_supra']}},
+    {id:'q_dm_insulina', text:'DM tipo 1 OU DM tipo 2 com insulinoterapia?',
+     hint:'Requer plano de gestão perioperatória da insulina para evitar hiper e hipoglicemia.',
+     yes:{flags:[{level:'p2',text:'DM Insulinotratada — plano de insulina perioperatória',ref:'ESAIC 2023/SPA'}],mcdt:['hba1c'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_dm_hba1c', text:'HbA1c > 8,5% ou suspeita de mau controlo metabólico?',
+     hint:'HbA1c > 8,5% associa-se a aumento de complicações (infeção, cicatrização). Idealmente diferir até HbA1c < 8,5%.',
+     yes:{flags:[{level:'p2',text:'DM Mal Controlada (HbA1c > 8,5%) — ponderar diferimento para otimização',ref:'ESAIC 2023'}],mcdt:['hba1c'],follow:[]},
+     no:{flags:[],mcdt:['hba1c'],follow:[]}},
+    {id:'q_dm_complic', text:'DM com complicações sistémicas?\n(Nefropatia, neuropatia autonómica, retinopatia proliferativa, cardiopatia isquémica)',
+     hint:'',
+     yes:{flags:[{level:'p2',text:'DM com Complicações Sistémicas Major — avaliação multiorgânica',ref:'ESAIC 2023'}],mcdt:['ecg'],follow:[]},
+     no:{flags:[{level:'p3',text:'DM ADO Controlada — suspender metformina 48h antes de cirurgia major; monitorizar glicose',ref:'ESAIC 2023'}],mcdt:[],follow:[]}},
+    {id:'q_tiroide', text:'Hipertiroidismo ativo NÃO controlado\nOU Hipotiroidismo grave (TSH > 10 mU/L ou sintomático)?',
+     hint:'Hipertiroidismo não controlado: risco de crise tirotóxica. Hipotiroidismo grave: risco de coma mixedematoso.',
+     yes:{flags:[{level:'p1',text:'Tiroideopatia Não Controlada — diferir cirurgia eletiva',ref:'ESAIC 2023'}],mcdt:['tsh'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_supra']}},
+    {id:'q_supra', text:'Corticoterapia sistémica crónica?\n(≥ 5 mg/dia prednisolona ou equivalente, por ≥ 4 semanas)',
+     hint:'Supressão do eixo HPA → risco de insuficiência suprarrenal aguda perioperatória. Necessária suplementação com stress dose de hidrocortisona.',
+     yes:{flags:[{level:'p2',text:'Corticoterapia Crónica — stress dose de hidrocortisona perioperatória',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'renal', title:'Sistema Renal', icon:'🫘', color:'#4A5568', questions:[
+    {id:'q_drc', text:'Doença Renal Crónica (TFG < 60 mL/min/1,73m²)\nOU em diálise OU transplante renal?',
+     hint:'TFG < 60 é o limiar de relevância pré-anestésica. Em dúvida, verificar creatinina e calcular TFG (CKD-EPI).',
+     yes:{flags:[],mcdt:[],follow:['q_drc_dialise','q_drc_mod']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_drc_dialise', text:'DRC G5 (TFG < 15 mL/min/1,73m²), em diálise ou transplante renal?',
+     hint:'Coordenar com Nefrologia: timing de diálise, ionograma, acesso vascular, imunossupressão (transplante).',
+     yes:{flags:[{level:'p1',text:'IRC Terminal / Diálise / Transplante Renal — coordenar com Nefrologia',ref:'ESAIC 2023'}],mcdt:['cbc','coag','bnp'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_drc_mod']}},
+    {id:'q_drc_mod', text:'DRC G3b–G4 (TFG 15–44 mL/min/1,73m²)?',
+     hint:'Risco aumentado de IRA perioperatória, toxicidade de fármacos e distúrbios eletrolíticos.',
+     yes:{flags:[{level:'p2',text:'DRC Moderada-Grave (G3b-G4) — creatinina, ionograma, hemograma',ref:'ESAIC 2023'}],mcdt:['cbc'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'hepatico', title:'Sistema Hepático', icon:'🫀', color:'#5E3A1E', questions:[
+    {id:'q_hep_gateway', text:'O doente tem hepatopatia crónica conhecida?\n(Cirrose, hepatite viral B ou C, esteatohepatite, hepatite autoimune)',
+     hint:'',
+     yes:{flags:[],mcdt:[],follow:['q_cirrose_bc','q_cirrose_a','q_hepatite']},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_cirrose_bc', text:'Cirrose Child-Pugh B ou C\nOU MELD > 10\nOU ascite atual\nOU encefalopatia hepática?',
+     hint:'Cirrose Child B-C: mortalidade perioperatória muito elevada. Avaliação multidisciplinar obrigatória antes de qualquer cirurgia eletiva.',
+     yes:{flags:[{level:'p1',text:'Cirrose Hepática Grave (Child B-C / MELD > 10) — Hepatologia obrigatória',ref:'ESAIC 2023'}],mcdt:['cbc','coag'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_cirrose_a']}},
+    {id:'q_cirrose_a', text:'Cirrose hepática Child-Pugh A compensada\n(sem ascite, encefalopatia ou coagulopatia grave)?',
+     hint:'',
+     yes:{flags:[{level:'p2',text:'Cirrose Child-Pugh A — monitorizar coagulação, plaquetas e albumina',ref:'ESAIC 2023'}],mcdt:['cbc','coag'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_hepatite']}},
+    {id:'q_hepatite', text:'Hepatite viral ativa com replicação documentada?\n(HBV-DNA ou HCV-RNA detectáveis)',
+     hint:'Coordenar com Infecciologia / Hepatologia. Risco de disfunção hepática perioperatória e exposição da equipa.',
+     yes:{flags:[{level:'p2',text:'Hepatite Viral Ativa — coordenar com Infecciologia/Hepatologia',ref:'ESAIC 2023'}],mcdt:['coag'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'hemato', title:'Hematologia e Hemostase', icon:'🩸', color:'#2E5E7A', questions:[
+    {id:'q_anemia', text:'O doente tem anemia?\n(Hgb < 12 g/dL em mulheres OU < 13 g/dL em homens)',
+     hint:'Solicitar hemograma se não realizado recentemente. A anemia pré-operatória é modificável e reduz a necessidade de transfusão.',
+     yes:{flags:[],mcdt:[],follow:['q_anemia_grave','q_anemia_mod']},
+     no:{flags:[],mcdt:[],follow:['q_coagulopatia','q_trombocito']}},
+    {id:'q_anemia_grave', text:'Anemia grave (Hgb < 8 g/dL)?',
+     hint:'Diferir cirurgia eletiva. Investigar causa (ferro, B12, doença crónica). Ferro IV ou EPO. Raramente transfusão se Hgb < 6.',
+     yes:{flags:[{level:'p1',text:'Anemia Grave (Hgb < 8 g/dL) — diferir cirurgia; investigar e tratar',ref:'ESAIC 2023/NATA 2017'}],mcdt:['cbc','ferro'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_anemia_mod']}},
+    {id:'q_anemia_mod', text:'Anemia moderada (Hgb 8–10 g/dL)?',
+     hint:'Solicitar perfil de ferro, B12, ácido fólico. Ferro IV se deficiência e cirurgia em ≥ 4 semanas.',
+     yes:{flags:[{level:'p2',text:'Anemia Moderada (Hgb 8-10 g/dL) — investigar e tratar; ferro IV se indicado',ref:'ESAIC 2023/NATA 2017'}],mcdt:['cbc','ferro'],follow:[]},
+     no:{flags:[{level:'p3',text:'Anemia Ligeira (Hgb 10-12/13) — ponderar ferro IV se cirurgia com perda > 500 mL em ≥ 4 semanas',ref:'NATA 2017'}],mcdt:['cbc','ferro'],follow:[]}},
+    {id:'q_coagulopatia', text:'Coagulopatia conhecida?\n(Hemofilia, Doença de von Willebrand, défice de fatores de coagulação, uso de anticoagulante oral)',
+     hint:'Anestesia regional neuroaxial contraindicada. Necessário plano de reposição com Hematologia.',
+     yes:{flags:[{level:'p1',text:'Coagulopatia Congénita / Adquirida Grave — Hematologia obrigatória; sem bloqueio neuroaxial',ref:'ESAIC 2023'}],mcdt:['coag','cbc'],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_trombocito']}},
+    {id:'q_trombocito', text:'Trombocitopenia (plaquetas < 100.000/µL)?',
+     hint:'Plt < 80.000: contraindicação para bloqueio neuroaxial. Plt < 50.000: cirurgia major de alto risco hemorrágico.',
+     yes:{flags:[{level:'p2',text:'Trombocitopenia — sem bloqueio neuroaxial se plt < 80K; investigar causa',ref:'ESAIC 2023'}],mcdt:['cbc','coag'],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'neuro', title:'Sistema Neurológico', icon:'🧠', color:'#3A3A3A', questions:[
+    {id:'q_epilepsia', text:'Epilepsia ativa (≥ 1 crise nos últimos 12 meses)\nOU epilepsia refratária sob politerapia?',
+     hint:'Garantir continuidade da medicação antiepiléptica no perioperatório. Alguns anestésicos podem diminuir o limiar convulsivo.',
+     yes:{flags:[{level:'p2',text:'Epilepsia Ativa — continuidade medicação antiepiléptica; interação com anestésicos',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_parkinson', text:'Doença de Parkinson ou outra doença sob medicação dopaminérgica?\n(Levodopa/carbidopa, bromocriptina, pramipexol)',
+     hint:'Levodopa: meia-vida curta. Suspensão precipita síndrome de retirada grave (rigidez, crise acinética). Planear via alternativa.',
+     yes:{flags:[{level:'p2',text:'Doença de Parkinson — continuidade levodopa obrigatória; via alternativa se necessário',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+    {id:'q_demencia', text:'Demência moderada-grave (CDR ≥ 2, MMSE < 18)\nOU delirium pós-operatório em cirurgia anterior?',
+     hint:'Forte preditor de POCD e delirium. Evitar benzodiazepinas, monitorizar BIS, mobilização precoce.',
+     yes:{flags:[{level:'p2',text:'Demência / Risco de POCD — estratégias prevenção delirium; BIS; envolver cuidadores',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'viaAerea', title:'Via Aérea', icon:'😮', color:'#1A3A5C', questions:[
+    {id:'q_va_conhecida', text:'Antecedente documentado de via aérea difícil?\n(Intubação difícil, laringoscopia difícil, ventilação com máscara facial difícil, uso de dispositivo supraglótico de salvamento)',
+     hint:'Via aérea difícil conhecida é indicação absoluta de avaliação pré-anestésica, independentemente do procedimento.',
+     yes:{flags:[{level:'p1',text:'Via Aérea Difícil Conhecida — alerta no processo; plano A/B/C; equipa experiente',ref:'ESAIC 2023/DAS 2015'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_va_pred']}},
+    {id:'q_va_pred', text:'Presença de ≥ 2 preditores de via aérea difícil?\n• Mallampati III–IV\n• Abertura da boca < 3 cm\n• Distância tiromental < 6 cm\n• Pescoço curto / obeso / imóvel\n• Micrognatia / retrognatia\n• Bócio / massa cervical\n• Irradiação cervical prévia\n• Instabilidade da coluna cervical',
+     hint:'Múltiplos preditores aumentam a probabilidade de via aérea difícil. Considerar nasofibrolaringoscopia pré-op.',
+     yes:{flags:[{level:'p2',text:'Preditores de Via Aérea Difícil (≥ 2) — plano anestésico específico; nasofibrolaringoscopia',ref:'ESAIC 2023'}],mcdt:[],follow:['q_obesidade']},
+     no:{flags:[],mcdt:[],follow:['q_obesidade']}},
+    {id:'q_obesidade', text:'Obesidade mórbida (IMC ≥ 40 kg/m²)?',
+     hint:'Associa-se a dificuldade de ventilação, redução da CRF e maior risco de atelectasias. IMC ≥ 50: solicitar ecocardiograma.',
+     yes:{flags:[{level:'p2',text:'Obesidade Mórbida (IMC ≥ 40) — via aérea; posicionamento; SAOS; CRF reduzida',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'anestHist', title:'Antecedentes Anestésicos', icon:'💊', color:'#2C4770', questions:[
+    {id:'q_hm', text:'História pessoal ou familiar de Hipertermia Maligna?\nOU reação grave a halogenados (succinilcolina, sevoflurano, desflurano)?',
+     hint:'HM: emergência com mortalidade muito elevada se não tratada. Requer TIVA (sem halogenados/succinilcolina) e dantroleno disponível.',
+     yes:{flags:[{level:'p1',text:'Hipertermia Maligna (HM) — TIVA obrigatória; confirmar dantroleno; alertar bloco',ref:'ESAIC 2023/EMHG'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_comp_anest']}},
+    {id:'q_comp_anest', text:'Complicação anestésica grave em cirurgia anterior?\n(Paragem cardíaca intraop., anafilaxia major, aspiração pulmonar grave, despertar intraoperatório)',
+     hint:'Solicitar registos anestésicos anteriores para identificar a causa e planear alternativas.',
+     yes:{flags:[{level:'p1',text:'Complicação Anestésica Grave Prévia — solicitar registos; plano alternativo',ref:'ESAIC 2023'}],mcdt:[],follow:['q_nvpo']},
+     no:{flags:[],mcdt:[],follow:['q_nvpo']}},
+    {id:'q_nvpo', text:'Náuseas e vómitos pós-operatórios (NVPO) graves e refratários em cirurgia anterior?',
+     hint:'Profilaxia multimodal: ondansetron + dexametasona + droperidol. Preferir TIVA. Evitar opioides se possível.',
+     yes:{flags:[{level:'p3',text:'NVPO Grave Prévio — profilaxia multimodal; preferir TIVA; score Apfel',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+  {id:'alergias', title:'Alergias e Reações Adversas', icon:'⚠️', color:'#4A1A4A', questions:[
+    {id:'q_alergia_anest', text:'Alergia documentada a agente anestésico?\n(Bloqueador neuromuscular, propofol, halogenado, anestésico local, opioide)',
+     hint:'Solicitar relatório de imunoalergologia se disponível. Requer reformulação completa do plano anestésico.',
+     yes:{flags:[{level:'p1',text:'Alergia a Agente Anestésico — reformular plano; Imunoalergologia; relatório obrigatório',ref:'ESAIC 2023'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:['q_latex']}},
+    {id:'q_latex', text:'Alergia ao látex?\n(Confirmada por teste OU história convincente: profissão de risco, múltiplas cirurgias, alergia a kiwi/banana/abacate)',
+     hint:'Cirurgia deve ser agendada em 1.º lugar do dia, em sala sem látex. Toda a equipa deve ser alertada.',
+     yes:{flags:[{level:'p2',text:'Alergia ao Látex — sala latex-free; 1.º caso do dia; alertar equipa de bloco',ref:'ESAIC 2023'}],mcdt:[],follow:['q_alergia_abx']},
+     no:{flags:[],mcdt:[],follow:['q_alergia_abx']}},
+    {id:'q_alergia_abx', text:'Alergia documentada a antibiótico de profilaxia habitual?\n(Cefazolina, cefalosporinas, penicilinas)',
+     hint:'Alternativas: clindamicina ou vancomicina. Confirmar com farmácia e protocolo de profilaxia local.',
+     yes:{flags:[{level:'p2',text:'Alergia a Antibiótico de Profilaxia (β-lactâmico) — alternativa: clindamicina ou vancomicina',ref:'Protocolo ULS'}],mcdt:[],follow:[]},
+     no:{flags:[],mcdt:[],follow:[]}},
+  ]},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let state = {
+  step:'specialty', specialty:null, procedure:null,
+  flags:{p1:[],p2:[],p3:[]},
+  mcdt:new Set(),
+  queue:[],
+  allAnswers:{},
+  history:[]
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const riskLabel = r => ['','Muito Baixo','Baixo','Intermédio','Elevado','Muito Elevado'][r]||'?';
+const riskMace  = r => ['','< 0,5%','0,5–1%','1–5%','> 5%','> 10%'][r]||'?';
+
+function stepDots(current){
+  const steps = ['Especialidade','Procedimento','Classificação','Avaliação Clínica','Relatório'];
+  return `<div class="step-dots">${steps.map((s,i)=>{
+    const n=i+1, cls=n===current?'active':n<current?'done':'';
+    return `<div class="step-dot ${cls}"><div class="dot">${n<current?'✓':n}</div><div class="dot-label">${s}</div></div>${i<steps.length-1?`<div class="dot-line ${n<current?'done-line':''}"></div>`:''}`
+  }).join('')}</div>`;
+}
+
+function findQuestion(id){for(const s of SYSTEMS){const q=s.questions.find(q=>q.id===id);if(q)return q;}return null;}
+function findSystem(qid){return SYSTEMS.find(s=>s.questions.some(q=>q.id===qid))||SYSTEMS[0];}
+function addFlag(level,text,ref){if(!state.flags[level].some(f=>f.text===text))state.flags[level].push({text,ref:ref||''});}
+function cloneFlags(){return{p1:[...state.flags.p1],p2:[...state.flags.p2],p3:[...state.flags.p3]};}
+
+function countAnswered(){return Object.keys(state.allAnswers).length;}
+function countTotal(){return SYSTEMS.reduce((a,s)=>a+s.questions.length,0);}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function selectSpecialty(id){
+  state.history.push({step:state.step});
+  state.specialty=id; state.step='procedure'; render();
+}
+function selectProcedure(id){
+  state.history.push({step:state.step});
+  state.procedure=PROCEDURES.find(p=>p.id===id); state.step='level3'; render();
+}
+function goBack(){
+  if(state.step==='procedure')state.step='specialty';
+  else if(state.step==='level3')state.step='procedure';
+  render();
+}
+function goBackClinical(){
+  if(state.history.length>0){
+    const prev=state.history.pop();
+    if(prev.fullState){
+      const fs=prev.fullState;
+      state.step=fs.step; state.queue=[...fs.queue];
+      state.flags=cloneFlagsFrom(fs.flags); state.mcdt=new Set(fs.mcdt);
+      state.allAnswers={...fs.allAnswers};
+    } else { state.step=prev.step||'specialty'; }
+    render();
+  }
+}
+function cloneFlagsFrom(f){return{p1:[...f.p1],p2:[...f.p2],p3:[...f.p3]};}
+
+function continueToLevel4(){
+  state.history.push({step:state.step});
+  const p=state.procedure;
+  if(p.mandatoryConsult) addFlag('p2','Consulta obrigatória pelo tipo de procedimento','Protocolo ULS');
+  if(p.diffAirway===true) addFlag('p2','Via Aérea Difícil prevista pelo procedimento','ESAIC 2023');
+  if(p.risk===4) addFlag('p2','Cirurgia de Risco Elevado (MACE 30d > 5%)','ESAIC 2023');
+  if(p.risk===5) addFlag('p1','Cirurgia de Risco Muito Elevado (MACE 30d > 10%) — consulta obrigatória','ESAIC 2023');
+  if(p.bloodLoss>=500) state.mcdt.add('cbc');
+  if(p.bloodLoss>=1000){state.mcdt.add('coag');state.mcdt.add('grupo');}
+  if(p.ecg===true) state.mcdt.add('ecg');
+  if(p.cbc===true) state.mcdt.add('cbc');
+  if(p.coag===true) state.mcdt.add('coag');
+  if(p.cxr===true) state.mcdt.add('cxr');
+  if(p.pfr===true) state.mcdt.add('pfr');
+  if(p.echo===true) state.mcdt.add('echo');
+  if(p.biochem==='full'||p.biochem==='full+hba1c') state.mcdt.add('biochem_full');
+  else if(p.biochem==='basic') state.mcdt.add('biochem_basic');
+  state.queue=SYSTEMS.map(s=>s.questions[0].id);
+  state.step='clinical'; render();
+}
+
+function earlyNoConsult(){
+  state.flags={p1:[],p2:[],p3:[]}; state.mcdt=new Set(); state.queue=[];
+  state.step='report'; render();
+}
+
+function answerQuestion(qid, answer){
+  const q=findQuestion(qid); if(!q){state.queue.shift();render();return;}
+  // Save history snapshot for back
+  state.history.push({fullState:{
+    step:state.step, queue:[...state.queue],
+    flags:cloneFlags(), mcdt:new Set(state.mcdt), allAnswers:{...state.allAnswers}
+  }});
+  state.allAnswers[qid]=answer;
+  const outcome=answer==='sim'?q.yes:q.no;
+  if(outcome){
+    (outcome.flags||[]).forEach(f=>addFlag(f.level,f.text,f.ref));
+    (outcome.mcdt||[]).forEach(m=>state.mcdt.add(m));
+  }
+  state.queue.shift();
+  if(outcome&&outcome.follow&&outcome.follow.length>0)
+    state.queue=[...outcome.follow.filter(id=>!state.allAnswers[id]),...state.queue];
+  // Remove already-answered questions from queue
+  state.queue=state.queue.filter(id=>!state.allAnswers[id]);
+  render();
+}
+
+function restart(){
+  state={step:'specialty',specialty:null,procedure:null,flags:{p1:[],p2:[],p3:[]},mcdt:new Set(),queue:[],allAnswers:{},history:[]};
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MCDT BUILDER
+// ═══════════════════════════════════════════════════════════════
+function buildMcdtList(){
+  const p=state.procedure; const ans=state.allAnswers;
+  const list=new Set();
+  const af=[...state.flags.p1,...state.flags.p2,...state.flags.p3].map(f=>f.text.toLowerCase());
+  const has=(...t)=>t.some(x=>af.some(f=>f.includes(x)));
+  const a=(q,v)=>ans[q]===v;
+
+  // From procedure
+  if(state.mcdt.has('ecg')) list.add('ECG de 12 Derivações');
+  if(state.mcdt.has('cbc')) list.add('Hemograma Completo');
+  if(state.mcdt.has('coag')) list.add('Coagulação (TP/INR, APTT, Fibrinogénio)');
+  if(state.mcdt.has('cxr')) list.add('Radiografia do Tórax (PA)');
+  if(state.mcdt.has('pfr')) list.add('Provas de Função Respiratória (Espirometria ± DLCO)');
+  if(state.mcdt.has('echo')) list.add('Ecocardiograma Transtorácico');
+  if(state.mcdt.has('biochem_full')) list.add('Bioquímica Completa (glicose, creatinina, Na, K, ureia, ALT, AST, bilirrubina, albumina)');
+  else if(state.mcdt.has('biochem_basic')) list.add('Bioquímica Básica (glicose, creatinina, ionograma)');
+  if(state.mcdt.has('grupo')) list.add('Grupo Sanguíneo + Pesquisa Anticorpos Irregulares + Reserva de Concentrados Eritrocitários');
+
+  // ECG
+  if(has('cardiopatia isquémica','insuficiência cardíaca','hta','fa/flutter','arritmia','estenose aórtica','valvulopatia','pacemaker','cdi','dispositivo cardíaco','bloqueio av','síncope','sca','eam','doença arterial','capacidade funcional < 4 met','dap sintomática','diabetes') || p.risk>=3)
+    list.add('ECG de 12 Derivações');
+
+  // CBC
+  if(has('anemia','trombocitopenia','coagulopatia','drc','cirrose','diálise','transplante renal') || p.risk>=4 || p.bloodLoss>=500)
+    list.add('Hemograma Completo');
+
+  // Biochem
+  if(has('cirrose','hepatopatia','drc','diálise','transplante renal') || p.risk>=5)
+    list.add('Bioquímica Completa (glicose, creatinina, Na, K, ureia, ALT, AST, bilirrubina, albumina)');
+  else if(has('hta','diabetes','drc moderada','cardiopatia') || p.risk>=3 || p.bloodLoss>=500)
+    list.add('Bioquímica Básica (glicose, creatinina, ionograma)');
+
+  // HbA1c
+  if(a('q_dm','sim')||a('q_dm_insulina','sim')||a('q_dm_hba1c','sim')||state.mcdt.has('hba1c'))
+    list.add('HbA1c (Hemoglobina A1c)');
+
+  // Coag
+  if(has('anticoagulação','coagulopatia','cirrose','trombocitopenia') || p.bloodLoss>=1000)
+    list.add('Coagulação (TP/INR, APTT, Fibrinogénio)');
+
+  // Chest X-ray
+  if(has('doença pulmonar','dpoc','fibrose','hipertensão pulmonar','insuficiência cardíaca descompensada') || p.risk>=5)
+    list.add('Radiografia do Tórax (PA)');
+
+  // PFR
+  if(has('dpoc','asma','fibrose pulmonar','doença pulmonar intersticial','hipertensão pulmonar')||state.mcdt.has('pfr'))
+    list.add('Provas de Função Respiratória (Espirometria ± DLCO)');
+
+  // Echo
+  if(has('insuficiência cardíaca','estenose aórtica','valvulopatia','hipertensão pulmonar','feve','obesidade mórbida')||state.mcdt.has('echo'))
+    list.add('Ecocardiograma Transtorácico');
+
+  // BNP
+  if(has('insuficiência cardíaca','diálise','drc terminal')||state.mcdt.has('bnp'))
+    list.add('BNP / NT-proBNP');
+
+  // Gasimetria
+  if(has('dpoc grave','hipertensão pulmonar','fibrose pulmonar','doença pulmonar intersticial')||state.mcdt.has('gasimetria'))
+    list.add('Gasimetria Arterial');
+
+  // Ferro
+  if(a('q_anemia','sim')||a('q_anemia_mod','sim')||a('q_anemia_grave','sim')||has('anemia'))
+    list.add('Perfil de Ferro (ferro sérico, ferritina, TIBC) + Vitamina B12 + Ácido Fólico');
+
+  // TSH
+  if(has('tiroideopatia')||a('q_tiroide','sim')||p.note.toLowerCase().includes('tsh'))
+    list.add('TSH');
+
+  // Grupo sangue
+  if(p.bloodLoss>=1000||p.risk>=5)
+    list.add('Grupo Sanguíneo + Pesquisa Anticorpos Irregulares + Reserva de Concentrados Eritrocitários');
+  else if(p.bloodLoss>=500)
+    list.add('Grupo Sanguíneo + Pesquisa de Anticorpos Irregulares');
+
+  // β-hCG
+  if(p.sp==='GIN')
+    list.add('Teste de Gravidez (β-hCG) — se mulher em idade fértil');
+
+  return Array.from(list);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+const app=document.getElementById('app');
+
+function render(){
+  if(state.step==='specialty')renderSpecialty();
+  else if(state.step==='procedure')renderProcedure();
+  else if(state.step==='level3')renderLevel3();
+  else if(state.step==='clinical'){
+    if(state.queue.length===0){state.step='report';render();}
+    else renderClinical();
+  }
+  else if(state.step==='report')renderReport();
+}
+
+function renderSpecialty(){
+  const sp=SPECIALTIES.find(s=>s.id===state.specialty);
+  app.innerHTML=`
+  <div class="header">
+    <div class="header-title">
+      <span class="header-icon">🏥</span>
+      <div><div class="header-main">Referenciação Pré-operatória — Consulta de Anestesiologia</div>
+      <div class="header-sub">ULS · Algoritmo Institucional · ESAIC 2023 · SPA · Protocolos Internos</div></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="step-indicator">${stepDots(1)}</div>
+    <div class="card">
+      <div class="card-title">Passo 1 — Especialidade Cirúrgica</div>
+      <div class="card-sub">Selecione a especialidade do médico referenciador</div>
+      <div class="specialty-grid">
+        ${SPECIALTIES.map(s=>`<button class="specialty-btn" onclick="selectSpecialty('${s.id}')">
+          <span class="spec-icon">${s.icon}</span><span class="spec-name">${s.name}</span>
+        </button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderProcedure(){
+  const sp=SPECIALTIES.find(s=>s.id===state.specialty);
+  const procs=PROCEDURES.filter(p=>p.sp===state.specialty);
+  app.innerHTML=`
+  <div class="header">
+    <div class="header-title">
+      <span class="header-icon">${sp.icon}</span>
+      <div><div class="header-main">${sp.name}</div>
+      <div class="header-sub">Selecione o procedimento previsto</div></div>
+    </div>
+    <button class="back-btn" onclick="goBack()">← Voltar</button>
+  </div>
+  <div class="main">
+    <div class="step-indicator">${stepDots(2)}</div>
+    <div class="card">
+      <div class="card-title">Passo 2 — Procedimento Cirúrgico</div>
+      <div class="card-sub">Clique no procedimento planeado para este doente</div>
+      <div class="proc-list">
+        ${procs.map(p=>`<button class="proc-btn" onclick="selectProcedure('${p.id}')">
+          <span class="proc-name">${p.name}</span>
+          <span class="proc-risk risk-${p.risk}">${riskLabel(p.risk)}</span>
+        </button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderLevel3(){
+  const p=state.procedure;
+  const sp=SPECIALTIES.find(s=>s.id===p.sp);
+  const earlyExit=(p.anesthesia.toLowerCase().includes('tópica')&&p.risk===1&&!p.mandatoryConsult);
+  app.innerHTML=`
+  <div class="header">
+    <div class="header-title">
+      <span class="header-icon">${sp.icon}</span>
+      <div><div class="header-main">${p.name}</div>
+      <div class="header-sub">Nível 3 — Classificação automática do procedimento</div></div>
+    </div>
+    <button class="back-btn" onclick="goBack()">← Voltar</button>
+  </div>
+  <div class="main">
+    <div class="step-indicator">${stepDots(3)}</div>
+    <div class="card">
+      <div class="card-title">Perfil do Procedimento</div>
+      <table class="proc-table">
+        <tr><td class="pt-label">Anestesia habitual</td><td>${p.anesthesia}</td></tr>
+        <tr><td class="pt-label">Risco cirúrgico</td><td><span class="badge risk-${p.risk}">${riskLabel(p.risk)} — MACE a 30d: ${riskMace(p.risk)}</span></td></tr>
+        <tr><td class="pt-label">Perda hemática esperada</td><td>${p.bloodLoss===0?'Mínima (<200 mL)':p.bloodLoss>=1000?`Major (≈ ${p.bloodLoss} mL)`:p.bloodLoss>=500?`Significativa (≈ ${p.bloodLoss} mL)`:`Baixa (≈ ${p.bloodLoss} mL)`}</td></tr>
+        <tr><td class="pt-label">Regime</td><td>${p.amb===true?'✅ Ambulatório possível':p.amb===false?'❌ Internamento necessário':'⚠️ Condicional'}</td></tr>
+        <tr><td class="pt-label">Via Aérea Difícil</td><td>${p.diffAirway===true?'⚠️ Prevista pelo procedimento':p.diffAirway==='cond'?'⚠️ Condicional — avaliar clinicamente':'Não prevista pelo procedimento'}</td></tr>
+        ${p.note?`<tr><td class="pt-label">Nota</td><td>${p.note}</td></tr>`:''}
+      </table>
+      ${earlyExit?`
+        <div class="early-exit">
+          <div class="exit-icon">✅</div>
+          <div><div class="exit-title">SAÍDA ANTECIPADA — Consulta provavelmente NÃO necessária</div>
+          <div class="exit-sub">Procedimento de muito baixo risco sob anestesia tópica. Em doente ASA I-II sem comorbilidades, não é necessária avaliação pré-anestésica. Se o doente tiver comorbilidades relevantes, prosseguir para avaliação clínica.</div></div>
+        </div>
+        <div class="level3-btns">
+          <button class="btn-secondary" onclick="continueToLevel4()">Doente com comorbilidades — Continuar avaliação</button>
+          <button class="btn-primary btn-green" onclick="earlyNoConsult()">Sem comorbilidades — Confirmar: Sem Consulta</button>
+        </div>
+      `:`
+        ${(p.mandatoryConsult||p.risk>=4)?`<div class="flags-preview"><div class="fp-title">🔎 Critérios identificados automaticamente:</div>
+          ${p.mandatoryConsult?`<div class="fp-flag fp-p2">⚑ Consulta obrigatória pelo tipo de procedimento</div>`:''}
+          ${p.risk>=5?`<div class="fp-flag fp-p1">⚑ Cirurgia de Risco Muito Elevado (MACE > 10%)</div>`:''}
+          ${p.risk===4?`<div class="fp-flag fp-p2">⚑ Cirurgia de Risco Elevado (MACE > 5%)</div>`:''}
+        </div>`:''}
+        <div class="level3-message">
+          ${p.mandatoryConsult?'⚠️ Este procedimento requer Consulta de Anestesiologia. Prossiga para identificar prioridade e MCDT.':'Prossiga para avaliação clínica do doente (Nível 4).'}
+        </div>
+        <div class="level3-btns">
+          <button class="btn-primary" onclick="continueToLevel4()">Continuar → Avaliação Clínica do Doente</button>
+        </div>
+      `}
+    </div>
+  </div>`;
+}
+
+function renderClinical(){
+  const qid=state.queue[0];
+  const q=findQuestion(qid);
+  if(!q){state.queue.shift();render();return;}
+  const sys=findSystem(qid);
+  const pct=Math.min(99,Math.round((countAnswered()/Math.max(countTotal(),1))*100));
+
+  app.innerHTML=`
+  <div class="header" style="background:${sys.color}">
+    <div class="header-title">
+      <span class="header-icon">${sys.icon}</span>
+      <div><div class="header-main">${sys.title}</div>
+      <div class="header-sub">${state.procedure.name}</div></div>
+    </div>
+    <button class="back-btn" onclick="goBackClinical()">← Voltar</button>
+  </div>
+  <div class="main main-clinical">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" style="width:${pct}%"></div>
+      <div class="progress-label">Avaliação Clínica — ${pct}% concluída · ${countAnswered()} perguntas respondidas</div>
+    </div>
+    <div class="clinical-layout">
+      <div class="question-area">
+        <div class="question-card">
+          <div class="q-system-badge" style="background:${sys.color}">${sys.icon} ${sys.title}</div>
+          <div class="q-text">${(q.text||'').replace(/\n/g,'<br>')}</div>
+          ${q.hint?`<div class="q-hint">ℹ️ ${q.hint}</div>`:''}
+          <div class="q-btns">
+            <button class="btn-sim" onclick="answerQuestion('${qid}','sim')">✓ &nbsp;SIM</button>
+            <button class="btn-nao" onclick="answerQuestion('${qid}','nao')">✗ &nbsp;NÃO</button>
+          </div>
+        </div>
+        <div class="nav-hint">Responda SIM ou NÃO. O algoritmo adapta-se automaticamente às suas respostas.</div>
+      </div>
+      <div class="criteria-panel">
+        <div class="cp-title">Critérios Identificados</div>
+        ${renderCriteriaPanel()}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCriteriaPanel(){
+  const {p1,p2,p3}=state.flags;
+  if(!p1.length&&!p2.length&&!p3.length)return'<div class="cp-empty">Nenhum critério identificado ainda</div>';
+  let h='';
+  if(p1.length){h+='<div class="cp-section cp-p1">⚡ PRIORITÁRIA (P1)</div>';h+=p1.map(f=>`<div class="cp-item cp-item-p1">• ${f.text}</div>`).join('');}
+  if(p2.length){h+='<div class="cp-section cp-p2">📋 NECESSÁRIA (P2)</div>';h+=p2.map(f=>`<div class="cp-item cp-item-p2">• ${f.text}</div>`).join('');}
+  if(p3.length){h+='<div class="cp-section cp-p3">🔧 OTIMIZAÇÃO (P3)</div>';h+=p3.map(f=>`<div class="cp-item cp-item-p3">• ${f.text}</div>`).join('');}
+  return h;
+}
+
+function renderReport(){
+  const p=state.procedure;
+  const sp=SPECIALTIES.find(s=>s.id===p.sp);
+  const {p1,p2,p3}=state.flags;
+  let decision,priority,decBg;
+  if(p1.length>0){decision='CONSULTA DE ANESTESIOLOGIA NECESSÁRIA';priority='⚡ PRIORITÁRIA — P1 (≤ 5 dias úteis)';decBg='#C00000';}
+  else if(p2.length>0||p.mandatoryConsult||p.risk>=4){decision='CONSULTA DE ANESTESIOLOGIA NECESSÁRIA';priority='📋 NORMAL — P2 (≤ 20 dias úteis)';decBg='#C05621';}
+  else if(p3.length>0){decision='CONSULTA DE ANESTESIOLOGIA — OTIMIZAÇÃO';priority='🔧 P3 (prazo a definir caso a caso)';decBg='#7F6000';}
+  else{decision='CONSULTA DE ANESTESIOLOGIA NÃO NECESSÁRIA';priority='✅ Prosseguir para cirurgia sem avaliação pré-anestésica';decBg='#276749';}
+  const mcdtList=buildMcdtList();
+  const dateStr=new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  app.innerHTML=`
+  <div class="header">
+    <div class="header-title">
+      <span class="header-icon">📋</span>
+      <div><div class="header-main">Relatório de Referenciação Pré-operatória</div>
+      <div class="header-sub">Emitido em ${dateStr} · ${sp.name} · ${p.name}</div></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="back-btn" onclick="goBackClinical()">← Rever</button>
+      <button class="back-btn" onclick="window.print()" style="background:rgba(255,255,255,.25)">🖨️ Imprimir</button>
+      <button class="back-btn" onclick="restart()" style="background:rgba(255,255,255,.25)">↺ Nova Avaliação</button>
+    </div>
+  </div>
+  <div class="main" id="report-content">
+    <div class="report-decision" style="background:${decBg};color:#fff">
+      <div class="rd-main">${decision}</div>
+      <div class="rd-priority">${priority}</div>
+    </div>
+    <div class="report-grid">
+      <div class="report-section">
+        <div class="rs-title">🔍 Procedimento e Risco Cirúrgico</div>
+        <table class="report-table">
+          <tr><td>Especialidade</td><td><strong>${sp.name}</strong></td></tr>
+          <tr><td>Procedimento</td><td><strong>${p.name}</strong></td></tr>
+          <tr><td>Risco Cirúrgico</td><td><span class="badge risk-${p.risk}">${riskLabel(p.risk)} (MACE 30d: ${riskMace(p.risk)})</span></td></tr>
+          <tr><td>Tipo de Anestesia</td><td>${p.anesthesia}</td></tr>
+          <tr><td>Perda Hemática Esperada</td><td>${p.bloodLoss===0?'Mínima':p.bloodLoss>=1000?`Major (≈${p.bloodLoss}mL)`:p.bloodLoss>=500?`Significativa (≈${p.bloodLoss}mL)`:`Baixa (≈${p.bloodLoss}mL)`}</td></tr>
+          <tr><td>Consulta por Procedimento</td><td>${p.mandatoryConsult?'✅ Sim':'—'}</td></tr>
+          ${p.note?`<tr><td>Nota</td><td>${p.note}</td></tr>`:''}
+        </table>
+      </div>
+      <div class="report-section">
+        <div class="rs-title">⚑ Motivos da Decisão</div>
+        ${p1.length===0&&p2.length===0&&p3.length===0&&!p.mandatoryConsult&&p.risk<4?
+          '<div class="rs-none">Nenhum critério clínico identificado. Doente sem patologia relevante identificada pela avaliação clínica.</div>':
+          `${(p.mandatoryConsult||p.risk>=4)?`<div class="rs-flag rs-p2">📋 ${p.risk>=5?'Cirurgia de Risco Muito Elevado':p.risk===4?'Cirurgia de Risco Elevado':'Consulta obrigatória pelo procedimento'}</div>`:''}`+
+          p1.map(f=>`<div class="rs-flag rs-p1">⚡ [P1] ${f.text}<div class="rs-ref">${f.ref}</div></div>`).join('')+
+          p2.map(f=>`<div class="rs-flag rs-p2">📋 [P2] ${f.text}<div class="rs-ref">${f.ref}</div></div>`).join('')+
+          p3.map(f=>`<div class="rs-flag rs-p3">🔧 [P3] ${f.text}<div class="rs-ref">${f.ref}</div></div>`).join('')
+        }
+      </div>
+      <div class="report-section report-section-full">
+        <div class="rs-title">🧪 Exames Complementares de Diagnóstico Recomendados</div>
+        ${mcdtList.length===0?
+          '<div class="rs-none">Nenhum exame complementar indicado (cirurgia de baixo risco, doente sem comorbilidades identificadas).</div>':
+          `<div class="mcdt-grid">${mcdtList.map(m=>`<div class="mcdt-item">✓ ${m}</div>`).join('')}</div>`
+        }
+        <div class="mcdt-note">⚠️ MCDT resultam da combinação procedimento + risco cirúrgico + comorbilidades. Não solicitar por rotina exames não listados. Baseado na ESAIC 2023 e recomendações SPA.</div>
+      </div>
+      <div class="report-section report-section-full">
+        <div class="rs-title">📚 Referências</div>
+        <div class="refs">
+          <div>• De Hert S, et al. ESAIC Guidelines: Pre-operative evaluation of adults undergoing elective non-cardiac surgery. Eur J Anaesthesiol 2023;40(1):13-103.</div>
+          <div>• Halvorsen S, et al. ESC Guidelines on cardiovascular assessment and management for non-cardiac surgery. Eur Heart J 2022;43(39):3826-3924.</div>
+          <div>• Sociedad Portuguesa de Anestesiologia (SPA). Recomendações para Avaliação Pré-Anestésica, 2022.</div>
+          <div>• Muñoz M, et al. NATA recommendations for Patient Blood Management in surgical patients. Br J Anaesth 2017;119(5):819-838.</div>
+          <div>• Protocolos Internos — Serviço de Anestesiologia ULS.</div>
+        </div>
+      </div>
+    </div>
+    <div class="report-footer">Gerado pelo CDSS de Referenciação Pré-operatória — ULS · ${dateStr} · Arquivar no processo clínico do doente.</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
